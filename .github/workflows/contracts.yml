@@ -10,9 +10,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  setup_rust:
+  test_token:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
     - name: Install nightly toolchain
@@ -23,14 +23,6 @@ jobs:
         components: rust-src
     - name: Install wasm
       run: rustup target add wasm32-unknown-unknown
-    
-  
-  test_token:
-    needs: setup_rust
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
     - name: Build
       working-directory: ./contracts/token
       run: cargo build --verbose
