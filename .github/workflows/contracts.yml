@@ -10,8 +10,11 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test_token:
+  test_contracts:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [token, database]
 
     steps:
     - uses: actions/checkout@v3
@@ -24,8 +27,8 @@ jobs:
     - name: Install wasm
       run: rustup target add wasm32-unknown-unknown
     - name: Build
-      working-directory: ./contracts/token
+      working-directory: ./contracts/${{ matrix.contract }}
       run: cargo build --verbose
     - name: Run tests
-      working-directory: ./contracts/token
+      working-directory: ./contracts/${{ matrix.contract }}
       run: cargo test --verbose
