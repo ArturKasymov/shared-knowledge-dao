@@ -2,6 +2,10 @@
 
 use ink_lang as ink;
 
+pub use database::{
+    DatabaseError, DatabaseContractRef
+};
+
 #[ink::contract]
 pub mod database {
     
