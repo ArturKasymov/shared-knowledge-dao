@@ -5,7 +5,7 @@ use ink_lang as ink;
 #[ink::contract]
 pub mod governor {
 
-    use database::{
+    use crate::database::{
         DatabaseError, DatabaseContractRef,
     };
     
@@ -95,6 +95,8 @@ pub mod governor {
             })
         }
 
+        // For use in tests:
+        // doesn't call TokenContract and DatabaseContract
         #[ink(constructor)]
         pub fn free(quorum: Percentage) -> Self {
             initialize_contract(|instance: &mut Self| {
