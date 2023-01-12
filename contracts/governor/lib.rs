@@ -5,7 +5,7 @@ use ink_lang as ink;
 #[ink::contract]
 pub mod governor {
 
-    use crate::database::{
+    use database::database::{
         DatabaseError, DatabaseContractRef,
     };
     
