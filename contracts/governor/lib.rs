@@ -23,7 +23,7 @@ pub mod governor {
         Mapping,
     };
 
-    use openbrush::contracts::traits::psp22::*;
+    use openbrush::contracts::traits::psp34::*;
 
     use nameof::name_of_type;
 
@@ -194,8 +194,8 @@ pub mod governor {
 
         fn account_weight(&self, caller: AccountId) -> Percentage {
             if let Some(token_contract) = self.token_contract {
-                let balance = PSP22Ref::balance_of(&token_contract, caller);
-                let total_supply = PSP22Ref::total_supply(&token_contract);
+                let balance = PSP34Ref::balance_of(&token_contract, caller);
+                let total_supply = PSP34Ref::total_supply(&token_contract) as u32;
                 (balance * 100 / total_supply) as Percentage
             } else {
                 // just set 50% to every vote in tests
