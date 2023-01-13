@@ -21,9 +21,11 @@ pub mod token {
 
     impl TokenContract {
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn new(owners: Vec<AccountId>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
-                instance._mint_to(instance.env().caller(), Id::U8(0)).expect("Should mint");
+                for (i, account) in owners.iter().enumerate() {
+                    instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
+                }
             })
         }
     }
@@ -39,21 +41,15 @@ pub mod token {
 
         #[ink::test]
         fn constructor_works() {
-            let alice = get_default_test_accounts().alice;
-            set_caller(alice);
-
-            let token = TokenContract::new();
-            assert_eq!(token.total_supply(), 1);
-            assert_eq!(token.balance_of(alice), 1);
-            assert_eq!(token.owner_of(Id::U8(0)), Some(alice));
+            let accounts = get_default_test_accounts();
+            let token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            assert_eq!(token.total_supply(), 2);
+            assert_eq!(token.balance_of(accounts.alice), 1);
+            assert_eq!(token.balance_of(accounts.bob), 1);
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
             default_accounts::<ink_env::DefaultEnvironment>()
-        }
-
-        fn set_caller(caller: AccountId) {
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
         }
     }
 }
