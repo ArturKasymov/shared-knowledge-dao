@@ -6,7 +6,7 @@ pub mod token {
     
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
-        contracts::psp34::*,
+        contracts::psp34::extensions::mintable::*,
         traits::Storage,
     };
 
@@ -18,6 +18,7 @@ pub mod token {
     }
 
     impl PSP34 for TokenContract {}
+    impl PSP34Mintable for TokenContract {}
 
     impl TokenContract {
         #[ink(constructor)]
@@ -46,6 +47,15 @@ pub mod token {
             assert_eq!(token.total_supply(), 2);
             assert_eq!(token.balance_of(accounts.alice), 1);
             assert_eq!(token.balance_of(accounts.bob), 1);
+        }
+
+        #[ink::test]
+        fn mint_works() {
+            let accounts = get_default_test_accounts();
+            let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            assert!(token.mint(accounts.frank, Id::U8(2)).is_ok(), "Expected to mint");
+            assert_eq!(token.total_supply(), 3);
+            assert_eq!(token.balance_of(accounts.frank), 1);
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
