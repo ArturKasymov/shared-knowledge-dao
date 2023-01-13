@@ -116,6 +116,7 @@ pub mod governor {
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
+            Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
 
             Ok(id)
         }
@@ -140,6 +141,8 @@ pub mod governor {
             let mut proposal_vote = self.proposal_votes.get(proposal_id).unwrap_or_default();
             proposal_vote.for_votes += weight;
             self.proposal_votes.insert(&proposal_id, &proposal_vote);
+            Self::emit_event(Self::env(), Event::VoteCasted(VoteCasted { proposal_id, weight }));
+            
             Ok(())
         }
 
@@ -158,6 +161,7 @@ pub mod governor {
             self._execute(&proposal)?;
             proposal.executed = true;
             self.proposals.insert(&proposal_id, &proposal);
+            Self::emit_event(Self::env(), Event::ProposalExecuted(ProposalExecuted { id: proposal_id }));
 
             Ok(())
         }
@@ -205,9 +209,28 @@ pub mod governor {
             id
         }
 
-        //fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
-        //    emitter.emit_event(event);
-        //}
+        fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
+            emitter.emit_event(event);
+        }
+    }
+
+    #[ink(event)]
+    pub struct ProposalAdded {
+        #[ink(topic)]
+        id: ProposalId,
+    }
+
+    #[ink(event)]
+    pub struct VoteCasted {
+        #[ink(topic)]
+        proposal_id: ProposalId,
+        weight: Percentage,
+    }
+
+    #[ink(event)]
+    pub struct ProposalExecuted {
+        #[ink(topic)]
+        id: ProposalId,
     }
 
     #[cfg(test)]
@@ -320,6 +343,87 @@ pub mod governor {
             governor.vote(0).ok();
             governor.execute(0).ok();
             assert_eq!(governor.execute(0), Result::Err(GovernorError::ProposalAlreadyExecuted));
+        }
+
+        #[ink::test]
+        fn event_on_proposal_added() {
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            
+            let recorded_events = recorded_events().collect::<Vec<_>>();
+            assert_expected_propose_event(
+                &recorded_events[0],
+                0,
+            );
+        }
+
+        #[ink::test]
+        fn event_on_vote_casted() {
+            let alice = get_default_test_accounts().alice;
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            set_caller(alice);
+            governor.vote(0).ok();
+
+            let recorded_events = recorded_events().collect::<Vec<_>>();
+            assert_expected_vote_event(
+                &recorded_events.last().expect("at least 1 event expected"),
+                0,
+                50,
+            );
+        }
+
+        #[ink::test]
+        fn event_on_proposal_executed() {
+            let accounts = get_default_test_accounts();
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            set_caller(accounts.alice);
+            governor.vote(0).ok();
+            set_caller(accounts.bob);
+            governor.vote(0).ok();
+            governor.execute(0).ok();
+
+            let recorded_events = recorded_events().collect::<Vec<_>>();
+            assert_expected_execute_event(
+                &recorded_events.last().expect("at least 1 event expected"),
+                0,
+            );
+        }
+
+        fn assert_expected_propose_event(event: &EmittedEvent, expected_id: ProposalId) {
+            let decoded_event = decode_event(&event);
+            if let Event::ProposalAdded(ProposalAdded { id }) = decoded_event {
+                assert_eq!(id, expected_id);
+            } else {
+                panic!("encountered unexpected event kind: expected {}", name_of_type!(ProposalAdded));
+            };
+        }
+
+        fn assert_expected_vote_event(event: &EmittedEvent,
+                                      expected_id: ProposalId,
+                                      expected_weight: Percentage) {
+            let decoded_event = decode_event(&event);
+            if let Event::VoteCasted(VoteCasted { proposal_id, weight }) = decoded_event {
+                assert_eq!(proposal_id, expected_id);
+                assert_eq!(weight, expected_weight);
+            } else {
+                panic!("encountered unexpected event kind: expected {}", name_of_type!(VoteCasted));
+            };
+        }
+
+        fn assert_expected_execute_event(event: &EmittedEvent, expected_id: ProposalId) {
+            let decoded_event = decode_event(&event);
+            if let Event::ProposalExecuted(ProposalExecuted { id }) = decoded_event {
+                assert_eq!(id, expected_id);
+            } else {
+                panic!("encountered unexpected event kind: expected {}", name_of_type!(ProposalExecuted));
+            };
+        }
+        
+        fn decode_event(event: &EmittedEvent) -> Event {
+            <Event as Decode>::decode(&mut &event.data[..])
+                .expect("encountered invalid contract event data buffer")
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
