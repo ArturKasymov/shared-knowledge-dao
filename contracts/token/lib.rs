@@ -6,7 +6,7 @@ pub mod token {
     
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
-        contracts::psp22::*,
+        contracts::psp34::*,
         traits::Storage,
     };
 
@@ -14,16 +14,16 @@ pub mod token {
     #[derive(Default, SpreadAllocate, Storage)]
     pub struct TokenContract {
         #[storage_field]
-        psp22: psp22::Data,
+        psp34: psp34::Data,
     }
 
-    impl PSP22 for TokenContract {}
+    impl PSP34 for TokenContract {}
 
     impl TokenContract {
         #[ink(constructor)]
-        pub fn new(initial_supply: Balance) -> Self {
+        pub fn new() -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
-                instance._mint_to(instance.env().caller(), initial_supply).expect("Should mint");
+                instance._mint_to(instance.env().caller(), Id::U8(0)).expect("Should mint");
             })
         }
     }
@@ -42,9 +42,10 @@ pub mod token {
             let alice = get_default_test_accounts().alice;
             set_caller(alice);
 
-            let token = TokenContract::new(100);
-            assert_eq!(token.total_supply(), 100);
-            assert_eq!(token.balance_of(alice), 100);
+            let token = TokenContract::new();
+            assert_eq!(token.total_supply(), 1);
+            assert_eq!(token.balance_of(alice), 1);
+            assert_eq!(token.owner_of(Id::U8(0)), Some(alice));
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
