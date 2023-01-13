@@ -6,7 +6,7 @@ use ink_lang as ink;
 pub mod governor {
 
     use database::database::{
-        DatabaseError, DatabaseContractRef,
+        DatabaseContractRef,
     };
     
     use ink_env::{
@@ -98,7 +98,7 @@ pub mod governor {
         // For use in tests:
         // doesn't call TokenContract and DatabaseContract
         #[ink(constructor)]
-        pub fn free(quorum: Percentage) -> Self {
+        pub fn test(quorum: Percentage) -> Self {
             initialize_contract(|instance: &mut Self| {
                 instance.quorum = num::clamp(quorum, 0, 100);
                 instance.token_contract = None;
@@ -106,7 +106,7 @@ pub mod governor {
             })
         }
 
-        // Propose a new item added to the database
+        // Propose a new item to the database
         #[ink(message)]
         pub fn propose(&mut self, item: String) -> Result<ProposalId, GovernorError> {
             let proposal = Proposal {
@@ -127,7 +127,7 @@ pub mod governor {
             let caller = self.env().caller();
             let proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
             if proposal.executed {
-                return Err(GovernorError::ProposalNotFound)
+                return Err(GovernorError::ProposalAlreadyExecuted)
             }
             
             if self.votes.get(&(proposal_id, caller)).is_some() {
@@ -194,6 +194,7 @@ pub mod governor {
                 let total_supply = PSP22Ref::total_supply(&token_contract);
                 (balance * 100 / total_supply) as Percentage
             } else {
+                // just set 50% to every vote in tests
                 50 as Percentage
             }
         }
@@ -223,13 +224,13 @@ pub mod governor {
 
         #[ink::test]
         fn constructor_works() {
-            let governor = GovernorContract::free(75);
+            let governor = GovernorContract::test(75);
             assert_eq!(governor.quorum, 75);
         }
 
         #[ink::test]
         fn propose_works() {
-            let mut governor = GovernorContract::free(75);
+            let mut governor = GovernorContract::test(75);
             assert_eq!(governor.propose("test".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
@@ -241,28 +242,84 @@ pub mod governor {
         #[ink::test]
         fn vote_works() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::free(75);
+            let mut governor = GovernorContract::test(75);
             governor.propose("test".to_string()).ok();
             set_caller(alice);
             assert!(governor.vote(0).is_ok(), "voting was expected to succeed");
             assert!(governor.has_voted(0, alice), "Alice was expected to have voted");
             assert_eq!(governor.get_proposal_vote(0), Some(ProposalVote { for_votes: 50 }));
         }
+
+        #[ink::test]
+        fn vote_wrong_proposal_id_fails() {
+            let mut governor = GovernorContract::test(75);
+            assert_eq!(governor.vote(0), Result::Err(GovernorError::ProposalNotFound));
+        }
+
+        #[ink::test]
+        fn vote_double_vote_fails() {
+            let alice = get_default_test_accounts().alice;
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            set_caller(alice);
+            governor.vote(0).ok();
+            assert_eq!(governor.vote(0), Result::Err(GovernorError::AlreadyVoted));
+        }
+
+        #[ink::test]
+        fn vote_for_executed_proposal_fails() {
+            let accounts = get_default_test_accounts();
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            set_caller(accounts.alice);
+            governor.vote(0).ok();
+            set_caller(accounts.bob);
+            governor.vote(0).ok();
+            governor.execute(0).ok();
+            assert_eq!(governor.vote(0), Result::Err(GovernorError::ProposalAlreadyExecuted));
+        }
         
         #[ink::test]
         fn execute_works() {
             let accounts = get_default_test_accounts();
-            let alice = accounts.alice;
-            let bob = accounts.bob;
-            let mut governor = GovernorContract::free(75);
+            let mut governor = GovernorContract::test(75);
             governor.propose("test".to_string()).ok();
-            set_caller(alice);
+            set_caller(accounts.alice);
             governor.vote(0).ok();
-            set_caller(bob);
+            set_caller(accounts.bob);
             governor.vote(0).ok();
             assert!(governor.execute(0).is_ok(), "executing a proposal was expected to succeed");
             assert_eq!(governor.get_proposal_vote(0), Some(ProposalVote { for_votes: 100 }));
             assert!(governor.get_proposal(0).unwrap().executed, "Proposal was expected to change execution status");
+        }
+
+        #[ink::test]
+        fn execute_wrong_proposal_id_fails() {
+            let mut governor = GovernorContract::test(75);
+            assert_eq!(governor.execute(0), Result::Err(GovernorError::ProposalNotFound));
+        }
+
+        #[ink::test]
+        fn execute_no_quorum_fails() {
+           let alice = get_default_test_accounts().alice;
+           let mut governor = GovernorContract::test(75);
+           governor.propose("test".to_string()).ok();
+           set_caller(alice);
+           governor.vote(0).ok();
+           assert_eq!(governor.execute(0), Result::Err(GovernorError::QuorumNotReached));
+        }
+
+        #[ink::test]
+        fn execute_executed_proposal_fails() {
+            let accounts = get_default_test_accounts();
+            let mut governor = GovernorContract::test(75);
+            governor.propose("test".to_string()).ok();
+            set_caller(accounts.alice);
+            governor.vote(0).ok();
+            set_caller(accounts.bob);
+            governor.vote(0).ok();
+            governor.execute(0).ok();
+            assert_eq!(governor.execute(0), Result::Err(GovernorError::ProposalAlreadyExecuted));
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
