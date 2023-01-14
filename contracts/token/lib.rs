@@ -6,7 +6,8 @@ pub mod token {
     
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
-        contracts::psp22::*,
+        contracts::psp34::extensions::mintable::*,
+        contracts::psp34::extensions::burnable::*,
         traits::Storage,
     };
 
@@ -14,16 +15,20 @@ pub mod token {
     #[derive(Default, SpreadAllocate, Storage)]
     pub struct TokenContract {
         #[storage_field]
-        psp22: psp22::Data,
+        psp34: psp34::Data,
     }
 
-    impl PSP22 for TokenContract {}
+    impl PSP34 for TokenContract {}
+    impl PSP34Mintable for TokenContract {}
+    impl PSP34Burnable for TokenContract {}
 
     impl TokenContract {
         #[ink(constructor)]
-        pub fn new(initial_supply: Balance) -> Self {
+        pub fn new(owners: Vec<AccountId>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
-                instance._mint_to(instance.env().caller(), initial_supply).expect("Should mint");
+                for (i, account) in owners.iter().enumerate() {
+                    instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
+                }
             })
         }
     }
@@ -39,20 +44,33 @@ pub mod token {
 
         #[ink::test]
         fn constructor_works() {
-            let alice = get_default_test_accounts().alice;
-            set_caller(alice);
-
-            let token = TokenContract::new(100);
-            assert_eq!(token.total_supply(), 100);
-            assert_eq!(token.balance_of(alice), 100);
+            let accounts = get_default_test_accounts();
+            let token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            assert_eq!(token.total_supply(), 2);
+            assert_eq!(token.balance_of(accounts.alice), 1);
+            assert_eq!(token.balance_of(accounts.bob), 1);
         }
+
+        #[ink::test]
+        fn mint_works() {
+            let accounts = get_default_test_accounts();
+            let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            assert!(token.mint(accounts.frank, Id::U8(2)).is_ok(), "Expected to mint");
+            assert_eq!(token.total_supply(), 3);
+            assert_eq!(token.balance_of(accounts.frank), 1);
+        }
+
+        #[ink::test]
+        fn burn_works() {
+            let accounts = get_default_test_accounts();
+            let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            assert!(token.burn(accounts.alice, Id::U8(0)).is_ok(), "Expected to burn");
+            assert_eq!(token.total_supply(), 1);
+            assert_eq!(token.balance_of(accounts.alice), 0);
+        }    
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
             default_accounts::<ink_env::DefaultEnvironment>()
-        }
-
-        fn set_caller(caller: AccountId) {
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
         }
     }
 }
