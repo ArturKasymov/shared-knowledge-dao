@@ -61,6 +61,12 @@ pub mod database {
             }
         }
 
+        // (For testing) Deletes the contract from the blockchain.
+        #[ink(message)]
+        pub fn suicide(&mut self) {
+            self.env().terminate_contract(self.env().caller());
+        }
+
         fn next_item_id(&mut self) -> ItemId {
             let id = self.next_item_id;
             self.next_item_id += 1;

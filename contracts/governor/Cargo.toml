@@ -1,6 +1,6 @@
 [package]
 name = "governor"
-version = "0.1.0"
+version = "0.2.1"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
@@ -19,7 +19,7 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp34"] }
 
 nameof = "1.2.2"
-num = "0.4.0"
+num = { version = "0.4.0", default-features = false }
 
 database = { path = "../database", default-features = false, features = ["ink-as-dependency"] }
 
@@ -43,6 +43,7 @@ std = [
     "scale/std",
     "scale-info",
     "scale-info/std",
+    "num/std",
     "database/std",
 
     "openbrush/std",

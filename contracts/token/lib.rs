@@ -3,7 +3,8 @@
 
 #[openbrush::contract]
 pub mod token {
-    
+   
+    use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::psp34::extensions::mintable::*,
@@ -30,6 +31,12 @@ pub mod token {
                     instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
                 }
             })
+        }
+
+        // (For testing) Deletes the contract from the blockchain.
+        #[ink(message)]
+        pub fn suicide(&mut self) {
+            self.env().terminate_contract(self.env().caller());
         }
     }
 

@@ -25,8 +25,6 @@ pub mod governor {
 
     use openbrush::contracts::traits::psp34::*;
 
-    use nameof::name_of_type;
-
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum GovernorError {
@@ -84,7 +82,7 @@ pub mod governor {
                 .endowment(0)
                 .instantiate()
                 .unwrap_or_else(|error| {
-                    panic!("failed to instantiate the {} contract: {:?}", name_of_type!(database::database::DatabaseContract), error)
+                    panic!("failed to instantiate the DatabaseContract: {:?}", error)
                 });
             let database_contract = <DatabaseContractRef as ToAccountId<super::governor::Environment>>::to_account_id(&database_ref);
 
@@ -181,6 +179,17 @@ pub mod governor {
             self.votes.get(&(proposal_id, account_id)).is_some()
         }
 
+        #[ink(message)]
+        pub fn get_database(&self) -> Option<AccountId> {
+            self.database_contract
+        }
+
+        // (For testing) Deletes the contract from the blockchain.
+        #[ink(message)]
+        pub fn suicide(&mut self) {
+            self.env().terminate_contract(self.env().caller());
+        }
+
         fn _execute(&self, proposal: &Proposal) -> Result<(), GovernorError> {
             if let Some(database_contract) = self.database_contract {
                 <DatabaseContractRef as FromAccountId<super::governor::Environment>>
@@ -244,6 +253,8 @@ pub mod governor {
             DefaultAccounts, EmittedEvent,
         };
         use scale::Decode;
+    
+        use nameof::name_of_type;
 
         #[ink::test]
         fn constructor_works() {
