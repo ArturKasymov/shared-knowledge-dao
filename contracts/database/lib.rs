@@ -61,6 +61,16 @@ pub mod database {
             }
         }
 
+        #[ink(message)]
+        pub fn get_by_id(&self, id: ItemId) -> Option<Item> {
+            self.items.get(id)
+        }
+
+        #[ink(message)]
+        pub fn get_items_count(&self) -> u32 {
+            self.next_item_id
+        }
+
         // (For testing) Deletes the contract from the blockchain.
         #[ink(message)]
         pub fn suicide(&mut self) {
