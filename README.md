@@ -11,6 +11,8 @@ rustup target add wasm32-unknown-unknown --toolchain nightly
 rustup default nightly
 sudo apt install binaryen
 cargo install --git https://github.com/paritytech/cargo-contract.git --rev 4f831bc2e4b8f3fa5a6a4d1b3fa673e99807af8f
+# Make sure Node.js v14+ is installed
+cd frontend && npm install
 ```
 
 ### Contracts
@@ -24,15 +26,16 @@ cd contracts/token && cargo test
 
 ### Deploy
 
-Note: before redeploying the contract, either
-1. bump up the contract's version in `Cargo.toml', or
-2. call `suicide` on the contract
-
 ```bash
 ./scripts/deploy.sh "<12-word seed of your polkadot account>"
 ```
 
 In `contracts/addresses.json` one can find the addresses of the currently deployed contracts
+
+Note: before redeploying the contract after code updates:
+```bash
+./scripts/terminate.sh "<12-word seed of your polkadot account>"
+```
 
 ### Contracts CLI
 
@@ -46,3 +49,15 @@ cd contracts/<contract_name> && cargo contract call \
 	-m <method_name> \
 		[--args arg1 arg2 ...]
 ```
+
+### Frontend
+
+```bash
+cd frontend
+./lint.sh
+./start.sh
+# Now you can modify the code, save the files, and the app will refresh automatically
+npm run-script stop
+```
+
+To see the logs, open the app in `localhost:3000` and `Ctrl+Shift+I`
