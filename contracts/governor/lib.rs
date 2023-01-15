@@ -7,6 +7,7 @@ pub mod governor {
 
     use database::database::{
         DatabaseContractRef,
+        ItemId, DatabaseError,
     };
     
     use ink_env::{
@@ -32,7 +33,14 @@ pub mod governor {
         ProposalAlreadyExecuted,
         AlreadyVoted,
         QuorumNotReached,
+        DatabaseError(DatabaseError),
         InkEnvError(String),
+    }
+
+    impl From<DatabaseError> for GovernorError {
+        fn from(e: DatabaseError) -> Self {
+            GovernorError::DatabaseError(e)
+        }
     }
 
     impl From<InkEnvError> for GovernorError {
@@ -43,10 +51,19 @@ pub mod governor {
 
     type Event = <GovernorContract as ContractEventBase>::Type;
 
+    #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum ProposalKind {
+        #[default]
+        Add,
+        Modify(ItemId),
+    }
+
     #[derive(Default, Debug, PartialEq, Eq, PackedLayout, SpreadLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Proposal {
         item: String,
+        kind: ProposalKind,
         executed: bool,
     }
 
@@ -106,9 +123,30 @@ pub mod governor {
 
         // Propose a new item to the database
         #[ink(message)]
-        pub fn propose(&mut self, item: String) -> Result<ProposalId, GovernorError> {
+        pub fn propose_add(&mut self, item: String) -> Result<ProposalId, GovernorError> {
             let proposal = Proposal {
                 item,
+                kind: ProposalKind::Add,
+                executed: false,
+            };
+
+            let id = self.next_proposal_id();
+            self.proposals.insert(id, &proposal);
+            Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
+
+            Ok(id)
+        }
+
+        // Propose modification to existing item in the database
+        #[ink(message)]
+        pub fn propose_modify(&mut self, item_id: ItemId, item: String) -> Result<ProposalId, GovernorError> {
+            if !self.is_item_in_database(item_id) {
+                return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
+            }
+
+            let proposal = Proposal {
+                item,
+                kind: ProposalKind::Modify(item_id),
                 executed: false,
             };
 
@@ -144,8 +182,9 @@ pub mod governor {
             Ok(())
         }
 
+        // Executes the proposal, and returns the item id in the database (if relevant)
         #[ink(message)]
-        pub fn execute(&mut self, proposal_id: ProposalId) -> Result<(), GovernorError> {
+        pub fn execute(&mut self, proposal_id: ProposalId) -> Result<Option<ItemId>, GovernorError> {
             let mut proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
             if proposal.executed {
                 return Err(GovernorError::ProposalAlreadyExecuted);
@@ -156,12 +195,12 @@ pub mod governor {
                 return Err(GovernorError::QuorumNotReached)
             }
 
-            self._execute(&proposal)?;
+            let item_id = self._execute(&proposal)?;
             proposal.executed = true;
             self.proposals.insert(&proposal_id, &proposal);
             Self::emit_event(Self::env(), Event::ProposalExecuted(ProposalExecuted { id: proposal_id }));
 
-            Ok(())
+            Ok(item_id)
         }
 
         #[ink(message)]
@@ -190,14 +229,27 @@ pub mod governor {
             self.env().terminate_contract(self.env().caller());
         }
 
-        fn _execute(&self, proposal: &Proposal) -> Result<(), GovernorError> {
+        fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
             if let Some(database_contract) = self.database_contract {
-                <DatabaseContractRef as FromAccountId<super::governor::Environment>>
-                    ::from_account_id(database_contract)
-                    .add_item(proposal.item.clone());
-                Ok(())
+                let mut database = Self::database_from_account_id(database_contract);
+                match proposal.kind {
+                    ProposalKind::Add =>
+                        return Ok(Some(database.add_item(proposal.item.clone()))),
+                    ProposalKind::Modify(item_id) => {
+                        database.modify_item(item_id, proposal.item.clone())?;
+                        return Ok(None)
+                    }
+                }
+            }
+            Ok(None)
+        }
+
+        fn is_item_in_database(&self, id: ItemId) -> bool {
+            if let Some(database_contract) = self.database_contract {
+                let database = Self::database_from_account_id(database_contract);
+                database.has_item(id)
             } else {
-                Ok(())
+                true
             }
         }
 
@@ -216,6 +268,11 @@ pub mod governor {
             let id = self.next_proposal_id;
             self.next_proposal_id += 1;
             id
+        }
+
+        fn database_from_account_id(id: AccountId) -> DatabaseContractRef {
+            <DatabaseContractRef as FromAccountId<super::governor::Environment>>
+                ::from_account_id(id)
         }
 
         fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
@@ -263,12 +320,27 @@ pub mod governor {
         }
 
         #[ink::test]
-        fn propose_works() {
+        fn propose_add_works() {
             let mut governor = GovernorContract::test(75);
-            assert_eq!(governor.propose("test".to_string()), Ok(0));
+            assert_eq!(governor.propose_add("test".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
                 item: "test".to_string(),
+                kind: ProposalKind::Add,
+                executed: false,
+            }));
+        }
+        
+        #[ink::test]
+        fn propose_modify_works() {
+            let mut governor = GovernorContract::test(75);
+            // NOTE: not testing modification of non-existing items, because
+            // injecting a database contract instance is problematic
+            assert_eq!(governor.propose_modify(0, "test".to_string()), Ok(0));
+            assert_eq!(governor.next_proposal_id, 1);
+            assert_eq!(governor.get_proposal(0), Some(Proposal {
+                item: "test".to_string(),
+                kind: ProposalKind::Modify(0),
                 executed: false,
             }));
         }
@@ -277,7 +349,7 @@ pub mod governor {
         fn vote_works() {
             let alice = get_default_test_accounts().alice;
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(alice);
             assert!(governor.vote(0).is_ok(), "voting was expected to succeed");
             assert!(governor.has_voted(0, alice), "Alice was expected to have voted");
@@ -294,7 +366,7 @@ pub mod governor {
         fn vote_double_vote_fails() {
             let alice = get_default_test_accounts().alice;
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(alice);
             governor.vote(0).ok();
             assert_eq!(governor.vote(0), Result::Err(GovernorError::AlreadyVoted));
@@ -304,7 +376,7 @@ pub mod governor {
         fn vote_for_executed_proposal_fails() {
             let accounts = get_default_test_accounts();
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(accounts.alice);
             governor.vote(0).ok();
             set_caller(accounts.bob);
@@ -317,7 +389,7 @@ pub mod governor {
         fn execute_works() {
             let accounts = get_default_test_accounts();
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(accounts.alice);
             governor.vote(0).ok();
             set_caller(accounts.bob);
@@ -337,7 +409,7 @@ pub mod governor {
         fn execute_no_quorum_fails() {
            let alice = get_default_test_accounts().alice;
            let mut governor = GovernorContract::test(75);
-           governor.propose("test".to_string()).ok();
+           governor.propose_add("test".to_string()).ok();
            set_caller(alice);
            governor.vote(0).ok();
            assert_eq!(governor.execute(0), Result::Err(GovernorError::QuorumNotReached));
@@ -347,7 +419,7 @@ pub mod governor {
         fn execute_executed_proposal_fails() {
             let accounts = get_default_test_accounts();
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(accounts.alice);
             governor.vote(0).ok();
             set_caller(accounts.bob);
@@ -359,12 +431,17 @@ pub mod governor {
         #[ink::test]
         fn event_on_proposal_added() {
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
+            governor.propose_modify(0, "test".to_string()).ok();
             
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_propose_event(
                 &recorded_events[0],
                 0,
+            );
+            assert_expected_propose_event(
+                &recorded_events[1],
+                1,
             );
         }
 
@@ -372,7 +449,7 @@ pub mod governor {
         fn event_on_vote_casted() {
             let alice = get_default_test_accounts().alice;
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(alice);
             governor.vote(0).ok();
 
@@ -388,7 +465,7 @@ pub mod governor {
         fn event_on_proposal_executed() {
             let accounts = get_default_test_accounts();
             let mut governor = GovernorContract::test(75);
-            governor.propose("test".to_string()).ok();
+            governor.propose_add("test".to_string()).ok();
             set_caller(accounts.alice);
             governor.vote(0).ok();
             set_caller(accounts.bob);

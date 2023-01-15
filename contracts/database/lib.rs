@@ -62,6 +62,11 @@ pub mod database {
         }
 
         #[ink(message)]
+        pub fn has_item(&self, id: ItemId) -> bool {
+            self.items.contains(id)
+        }
+
+        #[ink(message)]
         pub fn get_by_id(&self, id: ItemId) -> Option<Item> {
             self.items.get(id)
         }
