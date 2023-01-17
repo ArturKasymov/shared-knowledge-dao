@@ -5,6 +5,9 @@ use ink_lang as ink;
 #[ink::contract]
 pub mod governor {
 
+    use token::token::{
+        TokenContractRef,
+    };
     use database::database::{
         DatabaseContractRef,
         ItemId, DatabaseError,
@@ -33,8 +36,15 @@ pub mod governor {
         ProposalAlreadyExecuted,
         AlreadyVoted,
         QuorumNotReached,
+        TokenError(PSP34Error), // this can't happen in practice
         DatabaseError(DatabaseError),
         InkEnvError(String),
+    }
+
+    impl From<PSP34Error> for GovernorError {
+        fn from(e: PSP34Error) -> Self {
+            GovernorError::TokenError(e)
+        }
     }
 
     impl From<DatabaseError> for GovernorError {
@@ -53,18 +63,67 @@ pub mod governor {
 
     #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    pub enum ProposalKind {
+    pub enum ProposalDatabaseKind {
         #[default]
         Add,
         Modify(ItemId),
     }
 
+    #[derive(Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum ProposalCategory {
+        Token {
+            recipient: AccountId,
+        },
+        Database {
+            kind: ProposalDatabaseKind,
+            item: String,
+        }
+    }
+
+    impl Default for ProposalCategory {
+        fn default() -> Self {
+            Self::Token {
+                recipient: AccountId::default(),
+            }
+        }
+    }
+
     #[derive(Default, Debug, PartialEq, Eq, PackedLayout, SpreadLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Proposal {
-        item: String,
-        kind: ProposalKind,
+        category: ProposalCategory,
         executed: bool,
+    }
+
+    // A few constructors for convenience
+    impl Proposal {
+        fn token_mint(recipient: AccountId) -> Self {
+            Proposal {
+                category: ProposalCategory::Token { recipient },
+                executed: false,
+            }
+        }
+
+        fn item_add(item: String) -> Self {
+            Proposal {
+                category: ProposalCategory::Database {
+                    kind: ProposalDatabaseKind::Add,
+                    item,
+                },
+                executed: false,
+            }
+        }
+
+        fn item_modify(item_id: ItemId, item: String) -> Self {
+            Proposal {
+                category: ProposalCategory::Database {
+                    kind: ProposalDatabaseKind::Modify(item_id),
+                    item,
+                },
+                executed: false,
+            }
+        }
     }
 
     // range(0, 100)
@@ -101,7 +160,8 @@ pub mod governor {
                 .unwrap_or_else(|error| {
                     panic!("failed to instantiate the DatabaseContract: {:?}", error)
                 });
-            let database_contract = <DatabaseContractRef as ToAccountId<super::governor::Environment>>::to_account_id(&database_ref);
+            let database_contract = <DatabaseContractRef as ToAccountId<super::governor::Environment>>
+                ::to_account_id(&database_ref);
 
             initialize_contract(|instance: &mut Self| {
                 instance.quorum = num::clamp(quorum, 0, 100);
@@ -124,11 +184,7 @@ pub mod governor {
         // Propose a new item to the database
         #[ink(message)]
         pub fn propose_add(&mut self, item: String) -> Result<ProposalId, GovernorError> {
-            let proposal = Proposal {
-                item,
-                kind: ProposalKind::Add,
-                executed: false,
-            };
+            let proposal = Proposal::item_add(item);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -144,11 +200,18 @@ pub mod governor {
                 return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
             }
 
-            let proposal = Proposal {
-                item,
-                kind: ProposalKind::Modify(item_id),
-                executed: false,
-            };
+            let proposal = Proposal::item_modify(item_id, item);
+
+            let id = self.next_proposal_id();
+            self.proposals.insert(id, &proposal);
+            Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
+
+            Ok(id)
+        }
+
+        #[ink(message)]
+        pub fn propose_mint(&mut self, recipient: AccountId) -> Result<ProposalId, GovernorError> {
+            let proposal = Proposal::token_mint(recipient);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -230,14 +293,23 @@ pub mod governor {
         }
 
         fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
-            if let Some(database_contract) = self.database_contract {
-                let mut database = Self::database_from_account_id(database_contract);
-                match proposal.kind {
-                    ProposalKind::Add =>
-                        return Ok(Some(database.add_item(proposal.item.clone()))),
-                    ProposalKind::Modify(item_id) => {
-                        database.modify_item(item_id, proposal.item.clone())?;
-                        return Ok(None)
+            match &proposal.category {
+                ProposalCategory::Token { recipient } => {
+                    if let Some(token_contract) = self.token_contract {
+                        let mut token = Self::token_from_account_id(token_contract);
+                        token.mint(*recipient)?;
+                    }
+                },
+                ProposalCategory::Database { kind, item } => {
+                    if let Some(database_contract) = self.database_contract {
+                        let mut database = Self::database_from_account_id(database_contract);
+                        match kind {
+                            ProposalDatabaseKind::Add =>
+                                return Ok(Some(database.add_item(item.clone()))),
+                            ProposalDatabaseKind::Modify(item_id) => {
+                                database.modify_item(*item_id, item.clone())?;
+                            }
+                        }
                     }
                 }
             }
@@ -272,6 +344,11 @@ pub mod governor {
 
         fn database_from_account_id(id: AccountId) -> DatabaseContractRef {
             <DatabaseContractRef as FromAccountId<super::governor::Environment>>
+                ::from_account_id(id)
+        }
+        
+        fn token_from_account_id(id: AccountId) -> TokenContractRef {
+            <TokenContractRef as FromAccountId<super::governor::Environment>>
                 ::from_account_id(id)
         }
 
@@ -325,8 +402,10 @@ pub mod governor {
             assert_eq!(governor.propose_add("test".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
-                item: "test".to_string(),
-                kind: ProposalKind::Add,
+                category: ProposalCategory::Database {
+                    kind: ProposalDatabaseKind::Add,
+                    item: "test".to_string(),
+                },
                 executed: false,
             }));
         }
@@ -339,8 +418,24 @@ pub mod governor {
             assert_eq!(governor.propose_modify(0, "test".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
-                item: "test".to_string(),
-                kind: ProposalKind::Modify(0),
+                category: ProposalCategory::Database {
+                    kind: ProposalDatabaseKind::Modify(0),
+                    item: "test".to_string(),
+                },
+                executed: false,
+            }));
+        }
+
+        #[ink::test]
+        fn propose_mint_works() {
+            let alice = get_default_test_accounts().alice;
+            let mut governor = GovernorContract::test(75);
+            assert_eq!(governor.propose_mint(alice), Ok(0));
+            assert_eq!(governor.next_proposal_id, 1);
+            assert_eq!(governor.get_proposal(0), Some(Proposal {
+                category: ProposalCategory::Token {
+                    recipient: alice,
+                },
                 executed: false,
             }));
         }
