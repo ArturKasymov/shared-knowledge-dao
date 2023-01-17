@@ -29,7 +29,7 @@ function log_progress {
 }
 
 
-NODE_URL=wss://ws.test.azero.dev
+NODE_URL=wss://ws-smartnet.test.azero.dev
 AUTHORITY_SEED="$1"
 
 CONTRACTS_PATH=$(pwd)/contracts
@@ -85,7 +85,7 @@ function instantiate_governor_contract {
         --suri "$AUTHORITY_SEED" \
         --code-hash "$GOVERNOR_CODE_HASH" \
         --constructor new \
-	--args 0 75 "$TOKEN_ADDRESS" "$DATABASE_CODE_HASH")
+	--args 0 25 "$TOKEN_ADDRESS" "$DATABASE_CODE_HASH")
     
     if [ -n "$result" ]; then
         echo "$result" > governor.out
