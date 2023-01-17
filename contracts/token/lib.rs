@@ -7,7 +7,6 @@ pub mod token {
     use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
-        contracts::psp34::extensions::mintable::*,
         contracts::psp34::extensions::burnable::*,
         traits::Storage,
     };
@@ -17,26 +16,40 @@ pub mod token {
     pub struct TokenContract {
         #[storage_field]
         psp34: psp34::Data,
+        next_id: u8,
     }
 
     impl PSP34 for TokenContract {}
-    impl PSP34Mintable for TokenContract {}
     impl PSP34Burnable for TokenContract {}
 
     impl TokenContract {
         #[ink(constructor)]
         pub fn new(owners: Vec<AccountId>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
+                instance.next_id = owners.len() as u8;
                 for (i, account) in owners.iter().enumerate() {
                     instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
                 }
             })
         }
 
+        #[ink(message)]
+        pub fn mint(&mut self, recipient: AccountId) -> Result<Id, PSP34Error> {
+            let id = self.next_id();
+            self._mint_to(recipient, Id::U8(id))?;
+            Ok(Id::U8(id))
+        }
+
         // (For testing) Deletes the contract from the blockchain.
         #[ink(message)]
         pub fn suicide(&mut self) {
             self.env().terminate_contract(self.env().caller());
+        }
+
+        fn next_id(&mut self) -> u8 {
+            let id = self.next_id;
+            self.next_id += 1;
+            id
         }
     }
 
@@ -62,7 +75,7 @@ pub mod token {
         fn mint_works() {
             let accounts = get_default_test_accounts();
             let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
-            assert!(token.mint(accounts.frank, Id::U8(2)).is_ok(), "Expected to mint");
+            assert!(token.mint(accounts.frank).is_ok(), "Expected to mint");
             assert_eq!(token.total_supply(), 3);
             assert_eq!(token.balance_of(accounts.frank), 1);
         }

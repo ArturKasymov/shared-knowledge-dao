@@ -1,6 +1,6 @@
 [package]
 name = "governor"
-version = "0.2.1"
+version = "0.2.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
@@ -21,6 +21,7 @@ openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrus
 nameof = "1.2.2"
 num = { version = "0.4.0", default-features = false }
 
+token = { path = "../token", default-features = false, features = ["ink-as-dependency"] }
 database = { path = "../database", default-features = false, features = ["ink-as-dependency"] }
 
 [lib]
@@ -44,6 +45,7 @@ std = [
     "scale-info",
     "scale-info/std",
     "num/std",
+    "token/std",
     "database/std",
 
     "openbrush/std",

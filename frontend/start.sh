@@ -18,4 +18,4 @@ cp ../contracts/database/target/ink/metadata.json ./src/metadata/database_metada
 cp ../contracts/governor/target/ink/metadata.json ./src/metadata/governor_metadata.json || error "Please build Governor contract first (metadata.json not found)"
 
 
-REACT_APP_PROVIDER_URL="wss://ws.test.azero.dev" npm start &
+REACT_APP_PROVIDER_URL="wss://ws-smartnet.test.azero.dev" npm start &

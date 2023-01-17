@@ -1,8 +1,8 @@
 {
-  "token_code_hash": "0x260d0aa3835d3bae08ae6bbdf0b388a293cff171bae28ff3424e137730b1a4db",
-  "token_address": "5E4Krn2DVccYaDDNK9VnigaiWp8o4KaYfqyysc1V6LaLeG44",
-  "database_code_hash": "0x533b1dad4251e9fcab919f35587559c4f180c14a994ae77c313469a0dbcea207",
-  "database_address": "5DQ4WcXoESJkgx1oQpJkqktGfeLQd31ppjxpLvKSjEHFFxNe",
-  "governor_code_hash": "0x3fe82d08b90a230b47d5716c8342de3d2c5658e87a4264ff4bec3e7c25703b1f",
-  "governor_address": "5DK5jcdQAnzpRjjeahyegJMjrQ7vuMfmMyv78zWbNjV8n5fC"
+  "token_code_hash": "0x9e978167ca4422d19dabaa3f67d66409a5f359adee8f06b6c84cae58b8411d0c",
+  "token_address": "5G5YryeCY3P8vbkavJNZ2jsrEZtWbhf1FzHMqvec5dH2g1Gm",
+  "database_code_hash": "0x58947b1c9a96f63385a0ee9474af9789d8036583b0b20e3c470dc359dd281087",
+  "database_address": "5Hgv6tQCjNxGiQNKoZTrxZmrWBYsNLo8uHokWQPGE1DPLeVc",
+  "governor_code_hash": "0x500c306777a9daa6626501b9973ab3ac71ec09a9f3ba36471b4bf3e8a5b5d91b",
+  "governor_address": "5FH1DLyt6sCkSnGhSTADXxia8ZSYjnuZSW8wzugDJPSBHBUf"
 }
