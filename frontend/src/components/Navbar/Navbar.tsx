@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import HamburgerMenuIcon from 'components/HamburgerMenuIcon';
+import WalletButton from 'components/Wallet/WalletButton';
 
 import { queries } from 'shared/layout';
 import { ReactComponent as Icon } from 'assets/AlephZeroLogo.svg';
@@ -96,6 +97,7 @@ const MenuMobile = styled.nav`
 `;
 
 export interface NavbarProps {
+  setIsAccountsModalVisible: () => void;
   loggedAccountAddress?: string;
 }
 
@@ -106,11 +108,15 @@ const NavLinks = (): JSX.Element => (
   </>
 );
 
-const Navbar = ({ loggedAccountAddress }: NavbarProps): JSX.Element => {
+const Navbar = ({ setIsAccountsModalVisible, loggedAccountAddress }: NavbarProps): JSX.Element => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
 
   const onMobileBtnClick = () => {
     setIsMobileNavOpen(() => !isMobileNavOpen);
+  };
+
+  const onSetMobileNavClosed = () => {
+    setIsMobileNavOpen(false);
   };
 
   return (
@@ -120,6 +126,11 @@ const Navbar = ({ loggedAccountAddress }: NavbarProps): JSX.Element => {
       <NavlinksWrapper>
         <NavLinks />
       </NavlinksWrapper>
+      <WalletButton
+        setIsAccountsModalVisible={setIsAccountsModalVisible}
+        setIsMobileNavClosed={onSetMobileNavClosed}
+        loggedAccountAddress={loggedAccountAddress}
+      />
       <HamburgerMenuIcon onButtonClick={onMobileBtnClick} isOpen={isMobileNavOpen} />
       <MenuMobile className={isMobileNavOpen ? 'open' : 'closed'}>
         <NavLinks />

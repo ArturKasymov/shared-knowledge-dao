@@ -100,9 +100,9 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
             }
             case ItemModifiedEvent:
               console.log(decodedEvent);
-                break;
+              break;
             default:
-                break;
+              break;
           }
         }
       }

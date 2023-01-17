@@ -1,12 +1,12 @@
 {
   "source": {
-    "hash": "0x3fe82d08b90a230b47d5716c8342de3d2c5658e87a4264ff4bec3e7c25703b1f",
+    "hash": "0x03fc0400a2873aba2715988d332e535427af454660b89d3cf55955c7fe1dc4d0",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
   "contract": {
     "name": "governor",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "authors": [
       "[your_name] <[your_email]>"
     ]

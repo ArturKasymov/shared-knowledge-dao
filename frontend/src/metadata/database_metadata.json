@@ -6,7 +6,7 @@
   },
   "contract": {
     "name": "database",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "authors": [
       "[your_name] <[your_email]>"
     ]
