@@ -8,6 +8,31 @@ const DatabaseItemWrapper = styled.div`
   border-radius: 2px;
   display: flex;
   flex-direction: column;
+`;
+
+const Item = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin: auto;
+
+  .id-div {
+    height: 45px;
+    width: 50px;
+    position: relative;
+    margin: 12px;
+    align-self: center;
+    border: 2px solid transparent;
+    border-color: #0AE0DF;
+    border-radius: 50%;
+    text-align: center;
+    display: inline-block;
+    font-size: 2rem;
+    /*align-items: center;
+    justify-content: space-between;
+    top: -6px;
+    left: -6px;*/
+  }
 
   h3 {
     align-self: center;
@@ -57,6 +82,7 @@ const DatabaseItemWrapper = styled.div`
       background: ${({ theme }) => theme.colors.button.secondaryHover};
     }
   }
+
 `;
 
 interface DatabaseItemProps {
@@ -66,10 +92,15 @@ interface DatabaseItemProps {
 }
 
 const DatabaseItem = ({ id, text, displayFullItem }: DatabaseItemProps): JSX.Element => (
-  <DatabaseItemWrapper className="">
-    <h3 role="presentation" className="database-item-bottom" onClick={() => displayFullItem(id)}>
-      {text}
-    </h3>
+  <DatabaseItemWrapper>
+    <Item>
+      <div className="id-div">
+        {id}
+      </div>
+      <h3 role="presentation" className="database-item-bottom" onClick={() => displayFullItem(id)}>
+        {text}
+      </h3>
+    </Item>
   </DatabaseItemWrapper>
 );
 

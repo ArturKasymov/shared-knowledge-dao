@@ -1,12 +1,12 @@
 {
   "source": {
-    "hash": "0x533b1dad4251e9fcab919f35587559c4f180c14a994ae77c313469a0dbcea207",
+    "hash": "0x58947b1c9a96f63385a0ee9474af9789d8036583b0b20e3c470dc359dd281087",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
   "contract": {
     "name": "database",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "authors": [
       "[your_name] <[your_email]>"
     ]
@@ -130,6 +130,30 @@
             }
           ],
           "docs": [],
+          "label": "has_item",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bool"
+            ],
+            "type": 9
+          },
+          "selector": "0xdb4b6d1e"
+        },
+        {
+          "args": [
+            {
+              "label": "id",
+              "type": {
+                "displayName": [
+                  "ItemId"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
           "label": "get_by_id",
           "mutates": false,
           "payable": false,
@@ -137,7 +161,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 9
+            "type": 10
           },
           "selector": "0x5a35c742"
         },
@@ -349,6 +373,14 @@
       },
       {
         "id": 9,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
+        }
+      },
+      {
+        "id": 10,
         "type": {
           "def": {
             "variant": {
