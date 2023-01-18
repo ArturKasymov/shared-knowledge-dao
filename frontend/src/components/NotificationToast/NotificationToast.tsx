@@ -61,11 +61,10 @@ const CustomToast = styled(ToastContainer).attrs({
 
 const NotificationToast = (): JSX.Element => <CustomToast position="top-center" hideProgressBar />;
 
-export const displaySuccessToast = (): void => {
-  const toastHeading = "I'm a success toast heading, find me in displaySuccessToast method";
+export const displaySuccessToast = (message: string): void => {
   const toastParagraph = "I'm a success toastParagraph in displaySuccessToast";
   toast(
-    <ToastMessage toastType="success" toastHeading={toastHeading} toastParagraph={toastParagraph} />
+    <ToastMessage toastType="success" toastHeading={message} toastParagraph={toastParagraph} />
   );
 };
 

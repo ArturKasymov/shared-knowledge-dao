@@ -23,7 +23,7 @@ const Item = styled.div`
     margin: 12px;
     align-self: center;
     border: 2px solid transparent;
-    border-color: #0AE0DF;
+    border-color: #0ae0df;
     border-radius: 50%;
     text-align: center;
     display: inline-block;
@@ -82,7 +82,6 @@ const Item = styled.div`
       background: ${({ theme }) => theme.colors.button.secondaryHover};
     }
   }
-
 `;
 
 interface DatabaseItemProps {
@@ -94,9 +93,7 @@ interface DatabaseItemProps {
 const DatabaseItem = ({ id, text, displayFullItem }: DatabaseItemProps): JSX.Element => (
   <DatabaseItemWrapper>
     <Item>
-      <div className="id-div">
-        {id}
-      </div>
+      <div className="id-div">{id}</div>
       <h3 role="presentation" className="database-item-bottom" onClick={() => displayFullItem(id)}>
         {text}
       </h3>

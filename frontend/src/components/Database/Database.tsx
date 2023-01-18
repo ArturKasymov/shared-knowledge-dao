@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
 import type { EventRecord } from '@polkadot/types/interfaces';
-import { useDispatch, useSelector } from 'react-redux';
 
 import HeroHeading from 'components/HeroHeading';
 import Layout from 'components/Layout';
 import DatabaseItem from 'components/DatabaseItem';
+import { displayErrorToast } from 'components/NotificationToast';
 
+import { ErrorToastMessages } from 'shared/constants';
 import { RootState } from 'redux/store';
 import { setAllDatabaseItems } from 'redux/slices/databaseItemsSlice';
 import { queries } from 'shared/layout';
 import { getDatabaseItemsIds } from 'utils/getDatabaseItemsIds';
 import { getDatabaseItem, DatabaseItem as DatabaseItemModel } from 'utils/getDatabaseItem';
+import { proposeModifyItem as proposeModifyDatabaseItem } from 'utils/proposeDatabase';
 import {
   isDatabaseEvent,
   decodeDatabaseEvent,
@@ -46,6 +49,7 @@ interface DatabaseProps {
 const Database = ({ api }: DatabaseProps): JSX.Element => {
   const [databaseItems, setDatabaseItems] = useState<DatabaseItemModel[]>([]);
   const dispatch = useDispatch();
+  const loggedAccount = useSelector((state: RootState) => state.walletAccounts.account);
   const testDatabaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
   const [databaseItemDetailsDisplay, setDatabaseItemDetailsDisplay] =
     useState<DatabaseItemModel | null>(null);
@@ -80,7 +84,6 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
   }, [databaseItems, databaseItems.length, dispatch]);
 
   api?.query.system.events(async (events: EventRecord[]) => {
-    console.log(`Num events = ${events.length}`);
     events.forEach(async ({ event, phase }) => {
       if (api?.events.contracts.ContractEmitted.is(event)) {
         if (isDatabaseEvent(event)) {
@@ -109,10 +112,25 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     });
   });
 
+  const handleProposeModify = (id: number, text: string) => {
+    if (!loggedAccount) {
+      displayErrorToast(ErrorToastMessages.NO_WALLET);
+      return;
+    }
+
+    proposeModifyDatabaseItem(id, text, loggedAccount, api).then(() =>
+      setDatabaseItemDetailsDisplay(null)
+    );
+    // TODO: modify slices
+  };
+
   const displayFullDatabaseItem = (id: number) => {
     const itemToBeDisplayed = databaseItems.find((item) => item.id === id);
     if (!itemToBeDisplayed) return;
     setDatabaseItemDetailsDisplay(itemToBeDisplayed);
+  };
+
+  const displayProposeNewItemPopup = () => {
   };
 
   return (
@@ -121,6 +139,7 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
         <DatabaseItemDetailsPopup
           item={databaseItemDetailsDisplay}
           onPopupClose={() => setDatabaseItemDetailsDisplay(null)}
+          onItemPropose={handleProposeModify}
         />
       )}
       <Layout>
@@ -135,6 +154,10 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
                 displayFullItem={displayFullDatabaseItem}
               />
             ))}
+            <PlaceholderDatabaseItem
+              id={testDatabaseItems[testDatabaseItems.length - 1] + 1}
+              onClick={displayProposeNewItemPopup}
+              />
           </DatabaseContainer>
         </Wrapper>
       </Layout>
