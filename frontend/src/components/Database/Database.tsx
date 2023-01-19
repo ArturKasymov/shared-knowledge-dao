@@ -7,6 +7,7 @@ import type { EventRecord } from '@polkadot/types/interfaces';
 import HeroHeading from 'components/HeroHeading';
 import Layout from 'components/Layout';
 import DatabaseItem from 'components/DatabaseItem';
+import PlaceholderDatabaseItem from 'components/DatabaseItem/Placeholder';
 import { displayErrorToast } from 'components/NotificationToast';
 
 import { ErrorToastMessages } from 'shared/constants';
@@ -15,7 +16,10 @@ import { setAllDatabaseItems } from 'redux/slices/databaseItemsSlice';
 import { queries } from 'shared/layout';
 import { getDatabaseItemsIds } from 'utils/getDatabaseItemsIds';
 import { getDatabaseItem, DatabaseItem as DatabaseItemModel } from 'utils/getDatabaseItem';
-import { proposeModifyItem as proposeModifyDatabaseItem } from 'utils/proposeDatabase';
+import {
+  proposeModifyItem as proposeModifyDatabaseItem,
+  proposeAddItem as proposeAddDatabaseItem,
+} from 'utils/proposeDatabase';
 import {
   isDatabaseEvent,
   decodeDatabaseEvent,
@@ -23,6 +27,7 @@ import {
   ItemModifiedEvent,
 } from 'utils/decodeDatabaseEvent';
 
+import DatabaseProposeNewItemPopup from './DatabaseProposeNewItemPopup';
 import DatabaseItemDetailsPopup from './DatabaseItemDetailsPopup';
 
 const Wrapper = styled.div`
@@ -53,6 +58,7 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
   const testDatabaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
   const [databaseItemDetailsDisplay, setDatabaseItemDetailsDisplay] =
     useState<DatabaseItemModel | null>(null);
+  const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
 
   useEffect(() => {
     const allDatabaseItems: DatabaseItemModel[] = [];
@@ -112,6 +118,24 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     });
   });
 
+  const computePlaceholderId = () => {
+    const countItems = testDatabaseItems.length;
+    if (countItems > 0) {
+      return testDatabaseItems[countItems - 1].id + 1;
+    }
+    return 0;
+  };
+
+  const handleProposeAdd = (text: string) => {
+    if (!loggedAccount) {
+      displayErrorToast(ErrorToastMessages.NO_WALLET);
+      return;
+    }
+
+    proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+    // TODO: modify slices
+  };
+
   const handleProposeModify = (id: number, text: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
@@ -130,11 +154,14 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     setDatabaseItemDetailsDisplay(itemToBeDisplayed);
   };
 
-  const displayProposeNewItemPopup = () => {
-  };
-
   return (
     <>
+      {proposeNewItemDisplay && (
+        <DatabaseProposeNewItemPopup
+          onPopupClose={() => setProposeNewItemDisplay(false)}
+          onItemPropose={handleProposeAdd}
+        />
+      )}
       {databaseItemDetailsDisplay && (
         <DatabaseItemDetailsPopup
           item={databaseItemDetailsDisplay}
@@ -155,9 +182,9 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
               />
             ))}
             <PlaceholderDatabaseItem
-              id={testDatabaseItems[testDatabaseItems.length - 1] + 1}
-              onClick={displayProposeNewItemPopup}
-              />
+              id={computePlaceholderId()}
+              onClick={() => setProposeNewItemDisplay(true)}
+            />
           </DatabaseContainer>
         </Wrapper>
       </Layout>
