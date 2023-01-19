@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x500c306777a9daa6626501b9973ab3ac71ec09a9f3ba36471b4bf3e8a5b5d91b",
+    "hash": "0xe80644e99ee39f366ca0dae77792b21ede223ad8721f3ff7a5e5d3b359ca2555",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -152,6 +152,15 @@
                 ],
                 "type": 11
               }
+            },
+            {
+              "label": "description",
+              "type": {
+                "displayName": [
+                  "String"
+                ],
+                "type": 11
+              }
             }
           ],
           "docs": [],
@@ -185,6 +194,15 @@
                 ],
                 "type": 11
               }
+            },
+            {
+              "label": "description",
+              "type": {
+                "displayName": [
+                  "String"
+                ],
+                "type": 11
+              }
             }
           ],
           "docs": [],
@@ -208,6 +226,15 @@
                   "AccountId"
                 ],
                 "type": 9
+              }
+            },
+            {
+              "label": "description",
+              "type": {
+                "displayName": [
+                  "String"
+                ],
+                "type": 11
               }
             }
           ],
@@ -627,6 +654,11 @@
                   "name": "executed",
                   "type": 12,
                   "typeName": "bool"
+                },
+                {
+                  "name": "description",
+                  "type": 11,
+                  "typeName": "String"
                 }
               ]
             }

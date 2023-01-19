@@ -5,7 +5,7 @@
 set -euo pipefail
 
 
-NODE_URL=wss://ws.test.azero.dev
+NODE_URL=wss://ws-smartnet.test.azero.dev
 AUTHORITY_SEED="$1"
 
 CONTRACTS_PATH=$(pwd)/contracts
