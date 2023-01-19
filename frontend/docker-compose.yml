@@ -1,0 +1,8 @@
+version: '0.2'
+services:
+  shared_knowledge_dao:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_PROVIDER_URL=wss://ws-smartnet.test.azero.dev
