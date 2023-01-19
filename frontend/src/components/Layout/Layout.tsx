@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import 'react-toastify/dist/ReactToastify.css';
@@ -7,9 +7,12 @@ import Navbar from 'components/Navbar';
 import Footer from 'components/Footer';
 import NotificationToast from 'components/NotificationToast';
 import WelcomePopup from 'components/WelcomePopup';
+import AccountSelector from 'components/Wallet/AccountSelector';
 
 import { queries } from 'shared/layout';
 import { RootState } from 'redux/store';
+import checkIfAddressIsValid from 'utils/checkIfAddressIsValid';
+import { connectWallet, InjectedAccountWithMeta } from 'redux/slices/walletAccountsSlice';
 import backgroundTopImg from 'assets/png/panelBgTop.png';
 import backgroundBottomImg from 'assets/png/panelBgBottom.png';
 
@@ -50,17 +53,51 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const [isAccountsModalVisible, setIsAccountsModalVisible] = useState(false);
+
+  const dispatch = useDispatch();
   const isWelcomePopupVisible = useSelector(
     (state: RootState) => state.welcomePopup.isWelcomePopupVisible
   );
+  const { allAccounts, account: loggedAccount } = useSelector(
+    (state: RootState) => state.walletAccounts
+  );
+
+  const onModalAccountSelection = (account: InjectedAccountWithMeta): void => {
+    setIsAccountsModalVisible(false);
+    dispatch(connectWallet(account));
+  };
+
+  useEffect(() => {
+    if (isAccountsModalVisible) {
+      document.body.style.overflowY = 'scroll';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflowY = 'auto';
+      document.body.style.position = 'sticky';
+    }
+  }, [isAccountsModalVisible]);
 
   return (
     <Wrapper>
-      <Navbar />
+      <Navbar
+        setIsAccountsModalVisible={() => setIsAccountsModalVisible(true)}
+        loggedAccountAddress={
+          checkIfAddressIsValid(loggedAccount?.address) ? loggedAccount?.address : undefined
+        }
+      />
       {children}
       <NotificationToast />
       <Footer />
       {isWelcomePopupVisible && <WelcomePopup />}
+      {isAccountsModalVisible && (
+        <AccountSelector
+          accounts={allAccounts}
+          onAccountSelection={(account) => onModalAccountSelection(account)}
+          onModalClose={() => setIsAccountsModalVisible(false)}
+        />
+      )}
     </Wrapper>
   );
 };

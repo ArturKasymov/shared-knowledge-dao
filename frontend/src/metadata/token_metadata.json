@@ -1,12 +1,12 @@
 {
   "source": {
-    "hash": "0x260d0aa3835d3bae08ae6bbdf0b388a293cff171bae28ff3424e137730b1a4db",
+    "hash": "0x5fe4ebf3d4632ae11cac6f83726f4dacbf894ca7aa3531397714637bbf6b4e79",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
   "contract": {
     "name": "token",
-    "version": "0.2.5",
+    "version": "0.2.0",
     "authors": [
       "[your_name] <[your_email]>"
     ]
@@ -36,6 +36,30 @@
       "events": [],
       "messages": [
         {
+          "args": [
+            {
+              "label": "recipient",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 8
+              }
+            }
+          ],
+          "docs": [],
+          "label": "mint",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 22
+          },
+          "selector": "0xcfdd9aa2"
+        },
+        {
           "args": [],
           "docs": [],
           "label": "suicide",
@@ -43,140 +67,6 @@
           "payable": false,
           "returnType": null,
           "selector": "0x5cb03589"
-        },
-        {
-          "args": [
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "OwnerOfInput1"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Returns the owner of the token if any."
-          ],
-          "label": "PSP34::owner_of",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "OwnerOfOutput"
-            ],
-            "type": 22
-          },
-          "selector": "0x1168624d"
-        },
-        {
-          "args": [
-            {
-              "label": "owner",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput1"
-                ],
-                "type": 8
-              }
-            },
-            {
-              "label": "operator",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput2"
-                ],
-                "type": 8
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput3"
-                ],
-                "type": 14
-              }
-            }
-          ],
-          "docs": [
-            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
-            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
-          ],
-          "label": "PSP34::allowance",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "AllowanceOutput"
-            ],
-            "type": 23
-          },
-          "selector": "0x4790f55a"
-        },
-        {
-          "args": [
-            {
-              "label": "operator",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput1"
-                ],
-                "type": 8
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput2"
-                ],
-                "type": 14
-              }
-            },
-            {
-              "label": "approved",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput3"
-                ],
-                "type": 23
-              }
-            }
-          ],
-          "docs": [
-            " Approves `operator` to withdraw the `id` token from the caller's account.",
-            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
-            "",
-            " On success a `Approval` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Returns `SelfApprove` error if it is self approve.",
-            "",
-            " Returns `NotApproved` error if caller is not owner of `id`."
-          ],
-          "label": "PSP34::approve",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "ApproveOutput"
-            ],
-            "type": 24
-          },
-          "selector": "0x1932a8b0"
         },
         {
           "args": [
@@ -235,6 +125,34 @@
             "type": 24
           },
           "selector": "0x3128d61b"
+        },
+        {
+          "args": [
+            {
+              "label": "id",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "OwnerOfInput1"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [
+            " Returns the owner of the token if any."
+          ],
+          "label": "PSP34::owner_of",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34_external",
+              "OwnerOfOutput"
+            ],
+            "type": 25
+          },
+          "selector": "0x1168624d"
         },
         {
           "args": [],
@@ -305,11 +223,11 @@
         {
           "args": [
             {
-              "label": "account",
+              "label": "operator",
               "type": {
                 "displayName": [
-                  "psp34mintable_external",
-                  "MintInput1"
+                  "psp34_external",
+                  "ApproveInput1"
                 ],
                 "type": 8
               }
@@ -318,29 +236,95 @@
               "label": "id",
               "type": {
                 "displayName": [
-                  "psp34mintable_external",
-                  "MintInput2"
+                  "psp34_external",
+                  "ApproveInput2"
                 ],
-                "type": 1
+                "type": 14
+              }
+            },
+            {
+              "label": "approved",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "ApproveInput3"
+                ],
+                "type": 26
               }
             }
           ],
           "docs": [
-            " Mints a new token with `id`.",
+            " Approves `operator` to withdraw the `id` token from the caller's account.",
+            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
             "",
-            " See [`PSP34::_mint_to`]."
+            " On success a `Approval` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Returns `SelfApprove` error if it is self approve.",
+            "",
+            " Returns `NotApproved` error if caller is not owner of `id`."
           ],
-          "label": "PSP34Mintable::mint",
+          "label": "PSP34::approve",
           "mutates": true,
           "payable": false,
           "returnType": {
             "displayName": [
-              "psp34mintable_external",
-              "MintOutput"
+              "psp34_external",
+              "ApproveOutput"
             ],
             "type": 24
           },
-          "selector": "0x6c41f2ec"
+          "selector": "0x1932a8b0"
+        },
+        {
+          "args": [
+            {
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput1"
+                ],
+                "type": 8
+              }
+            },
+            {
+              "label": "operator",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput2"
+                ],
+                "type": 8
+              }
+            },
+            {
+              "label": "id",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput3"
+                ],
+                "type": 14
+              }
+            }
+          ],
+          "docs": [
+            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
+            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
+          ],
+          "label": "PSP34::allowance",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34_external",
+              "AllowanceOutput"
+            ],
+            "type": 26
+          },
+          "selector": "0x4790f55a"
         },
         {
           "args": [
@@ -467,6 +451,15 @@
               }
             },
             "name": "psp34"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 2
+              }
+            },
+            "name": "next_id"
           }
         ]
       }
@@ -853,50 +846,9 @@
             "variant": {
               "variants": [
                 {
-                  "index": 0,
-                  "name": "None"
-                },
-                {
                   "fields": [
                     {
-                      "type": 8
-                    }
-                  ],
-                  "index": 1,
-                  "name": "Some"
-                }
-              ]
-            }
-          },
-          "params": [
-            {
-              "name": "T",
-              "type": 8
-            }
-          ],
-          "path": [
-            "Option"
-          ]
-        }
-      },
-      {
-        "id": 23,
-        "type": {
-          "def": {
-            "primitive": "bool"
-          }
-        }
-      },
-      {
-        "id": 24,
-        "type": {
-          "def": {
-            "variant": {
-              "variants": [
-                {
-                  "fields": [
-                    {
-                      "type": 15
+                      "type": 1
                     }
                   ],
                   "index": 0,
@@ -905,7 +857,7 @@
                 {
                   "fields": [
                     {
-                      "type": 25
+                      "type": 23
                     }
                   ],
                   "index": 1,
@@ -917,11 +869,11 @@
           "params": [
             {
               "name": "T",
-              "type": 15
+              "type": 1
             },
             {
               "name": "E",
-              "type": 25
+              "type": 23
             }
           ],
           "path": [
@@ -930,7 +882,7 @@
         }
       },
       {
-        "id": 25,
+        "id": 23,
         "type": {
           "def": {
             "variant": {
@@ -981,6 +933,89 @@
             "psp34",
             "PSP34Error"
           ]
+        }
+      },
+      {
+        "id": 24,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 15
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 23
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 15
+            },
+            {
+              "name": "E",
+              "type": 23
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 25,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 8
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 8
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 26,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
         }
       }
     ]

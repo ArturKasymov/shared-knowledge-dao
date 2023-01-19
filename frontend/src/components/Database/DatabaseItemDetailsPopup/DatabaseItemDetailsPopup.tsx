@@ -1,62 +1,77 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { DatabaseItem } from 'utils/getDatabaseItem';
 
-const Wrapper = styled.div`
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  color: ${({ theme }) => theme.colors.white};
-  background-color: ${({ theme }) => theme.colors.backgroundDimmed};
-  z-index: 3000;
+import { DatabaseItemPopupTemplate } from '../Common';
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  .database-item-details {
-    background-color: ${({ theme }) => theme.colors.background};
-    min-width: 400px;
-    max-width: 1200px;
-    max-height: 400px;
-    overflow-wrap: break-word;
-    box-shadow: ${({ theme }) => theme.colors.nightShadow};
-
-    h3 {
-      align-self: center;
-      font-weight: 500;
-      padding: 20px;
-      width: 100%;
-    }
-  }
-
-  .database-item-bottom {
-    padding: 20px;
-    background-color: ${({ theme }) => theme.colors.night[300]};
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-`;
+interface DatabaseItemDetailsPopupProps {
+  item: DatabaseItem;
+  onPopupClose: () => void;
+  onItemPropose: (id: number, text: string) => void;
+}
 
 const DatabaseItemDetailsPopup = ({
   item,
   onPopupClose,
-}: {
-  item: DatabaseItem;
-  onPopupClose: () => void;
-}): JSX.Element => (
-  <Wrapper id="database-item-details-popup-bg" role="presentation" onClick={onPopupClose}>
-    <div className="database-item-details" role="presentation">
-      <h3>{item.text}</h3>
-      <div className="database-item-bottom">
-        <p>
-          <span>id:</span> {item.id}
-        </p>
-      </div>
-    </div>
-  </Wrapper>
-);
+  onItemPropose,
+}: DatabaseItemDetailsPopupProps): JSX.Element => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [isBeingModified, setIsBeingModified] = useState(false);
+
+  const handleCancel = () => {
+    setIsBeingModified(false);
+    if (textAreaRef.current) {
+      textAreaRef.current.value = item.text;
+    }
+  };
+
+  const handlePropose = () => {
+    setIsBeingModified(false);
+    if (textAreaRef.current) {
+      onItemPropose(item.id, textAreaRef.current.value);
+    }
+  };
+
+  const handleModify = () => {
+    setIsBeingModified(true);
+  };
+
+  // TODO: maybe disable propose button when wallet not connected?
+  return (
+    <DatabaseItemPopupTemplate
+      textArea={
+        <textarea
+          ref={textAreaRef}
+          defaultValue={item.text}
+          disabled={!isBeingModified || undefined}
+        />
+      }
+      leftBottomText={
+        <>
+          <span>ID:</span> {item.id}
+        </>
+      }
+      buttons={
+        isBeingModified ? (
+          <>
+            <button type="button" className="cancel" onClick={handleCancel}>
+              Cancel
+            </button>
+            <button type="button" onClick={handlePropose}>
+              Propose
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={handleModify}>
+            Modify
+          </button>
+        )
+      }
+      onPopupClose={onPopupClose}
+    />
+  );
+};
 
 export default DatabaseItemDetailsPopup;

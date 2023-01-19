@@ -11,3 +11,7 @@ export enum ErrorToastMessages {
   ERROR_CONTRACT_DATA = 'Error occured when setting up a contract.',
   CUSTOM = 'An error occured: ',
 }
+
+export enum SuccessToastMessages {
+  PROPOSAL_ADDED = 'Your proposal was successfully added to the pool. Now ask your friends to vote :)',
+}

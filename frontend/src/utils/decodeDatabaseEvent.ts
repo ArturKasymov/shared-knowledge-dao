@@ -36,6 +36,6 @@ export const decodeDatabaseEvent = (event: Event): DatabaseEvent => {
     case 'ItemModified':
       return new ItemModifiedEvent(itemId);
     default:
-        throw new Error('impossible');
+      throw new Error('impossible');
   }
 };

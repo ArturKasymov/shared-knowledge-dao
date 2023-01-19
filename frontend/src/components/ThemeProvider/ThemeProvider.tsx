@@ -18,6 +18,7 @@ const baseTheme = {
       shadow: 'rgba(127, 244, 227, 0.6)',
       shadowActive: 'rgba(127, 244, 227, 0.4)',
       shadowDark: 'rgba(0, 234, 199, 0.1)',
+      cancel: 'rgba(0, 0, 0, 0.15)',
     },
     night: {
       '100': '#111B24',
