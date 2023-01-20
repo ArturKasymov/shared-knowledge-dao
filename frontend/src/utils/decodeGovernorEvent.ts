@@ -16,6 +16,14 @@ export class ProposalAddedEvent implements GovernorEvent {
   constructor(public proposalId: number) {}
 }
 
+export class VoteCastedEvent implements GovernorEvent {
+  constructor(public proposalId: number, public weight: number) {}
+}
+
+export class ProposalExecutedEvent implements GovernorEvent {
+  constructor(public proposalId: number) {}
+}
+
 export const isGovernorEvent = (event: Event): boolean => {
   const accountId = event.data[0];
   return accountId.eq(addresses.governor_address);
@@ -30,6 +38,11 @@ export const decodeGovernorEvent = (event: Event): GovernorEvent => {
   switch (eventName) {
     case 'ProposalAdded':
       return new ProposalAddedEvent(proposalId);
+    case 'VoteCasted':
+      const weight = decoded.args[1].toPrimitive() as number;
+      return new VoteCastedEvent(proposalId, weight);
+    case 'ProposalExecuted':
+      return new ProposalExecutedEvent(proposalId);
     default:
       throw new Error('impossible');
   }

@@ -7,15 +7,8 @@ import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 
 import databaseMetadata from '../metadata/database_metadata.json';
 import addresses from '../metadata/addresses.json';
-import { sleep } from './sleep';
 
-export const getDatabaseItemsIds = async (api: ApiPromise | null): Promise<number[] | null> => {
-  await sleep(500);
-  if (api === null) {
-    displayErrorToast(ErrorToastMessages.ERROR_API_CONN);
-    return null;
-  }
-
+export const getDatabaseItemsIds = async (api: ApiPromise): Promise<number[] | null> => {
   const contract = new ContractPromise(api, databaseMetadata, addresses.database_address);
   const { result, output } = await contract.query.getItemsCount(contract.address, {
     gasLimit: GAS_LIMIT_VALUE,

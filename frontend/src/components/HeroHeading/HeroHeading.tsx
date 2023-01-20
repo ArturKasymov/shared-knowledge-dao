@@ -34,7 +34,7 @@ const HeroHeadingWrapper = styled.div`
   }
 `;
 
-type Variant = 'database' | 'another';
+type Variant = 'database' | 'proposals' | 'another';
 
 const HeroHeading = ({ variant }: { variant: Variant }) => (
   <>
@@ -42,6 +42,12 @@ const HeroHeading = ({ variant }: { variant: Variant }) => (
       <HeroHeadingWrapper>
         <h2>Database</h2>
         <p>Browse the database.</p>
+      </HeroHeadingWrapper>
+    )}
+    {variant === 'proposals' && (
+      <HeroHeadingWrapper>
+        <h2>Proposals</h2>
+        <p>Browse through the proposals.</p>
       </HeroHeadingWrapper>
     )}
     {variant === 'another' && (

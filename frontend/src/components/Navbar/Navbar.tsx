@@ -103,7 +103,8 @@ export interface NavbarProps {
 
 const NavLinks = (): JSX.Element => (
   <>
-    <Link to="/database">Database</Link>
+    <Link to="/database">Propose</Link>
+    <Link to="/proposals">Vote</Link>
     <Link to="/another">Another link `NavLinks` component</Link>
   </>
 );

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@polkadot/api-augment/polkadot';
 
 import './index.css';
 import ThemeProvider from 'components/ThemeProvider';

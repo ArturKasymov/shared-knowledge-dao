@@ -7,7 +7,6 @@ import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 
 import databaseMetadata from '../metadata/database_metadata.json';
 import addresses from '../metadata/addresses.json';
-import { sleep } from './sleep';
 
 export type DatabaseItem = {
   id: number;
@@ -16,14 +15,8 @@ export type DatabaseItem = {
 
 export const getDatabaseItem = async (
   id: number,
-  api: ApiPromise | null
+  api: ApiPromise
 ): Promise<DatabaseItem | null> => {
-  await sleep(500);
-  if (api === null) {
-    displayErrorToast(ErrorToastMessages.ERROR_API_CONN);
-    return null;
-  }
-
   const contract = new ContractPromise(api, databaseMetadata, addresses.database_address);
   const { result, output } = await contract.query.getById(
     contract.address,

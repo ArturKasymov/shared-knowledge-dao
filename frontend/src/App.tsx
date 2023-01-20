@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import '@polkadot/api-augment';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { IntercomProvider } from 'react-use-intercom';
 import { Provider as ReduxProvider } from 'react-redux';
@@ -7,6 +8,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 import './App.css';
 import { displayErrorToast } from 'components/NotificationToast';
 import Database from 'components/Database';
+import Proposals from 'components/Proposals';
 
 import formatChainStringToNumber from 'utils/formatChainStringToNumber';
 import { ErrorToastMessages } from 'shared/constants/index';
@@ -50,6 +52,7 @@ const App = (): JSX.Element => {
         <Router>
           <Routes>
             <Route path="/database" element={<Database api={api} />} />
+            <Route path="/proposals" element={<Proposals api={api} />} />
             <Route path="*" element={<Navigate to="/database" replace />} />
           </Routes>
         </Router>

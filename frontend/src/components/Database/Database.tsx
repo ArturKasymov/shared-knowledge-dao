@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
@@ -36,7 +36,7 @@ const Wrapper = styled.div`
 
 const DatabaseContainer = styled.div`
   width: 100%;
-  max-height: 520px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -60,35 +60,30 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     useState<DatabaseItemModel | null>(null);
   const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
 
+  const getAllDatabaseItemsIds = useCallback(async () => api && getDatabaseItemsIds(api), [api]);
+  const getDatabaseItemById = useCallback(
+    async (id: number) => api && getDatabaseItem(id, api),
+    [api]
+  );
+
   useEffect(() => {
-    const allDatabaseItems: DatabaseItemModel[] = [];
-
-    const getAllDatabaseItemsIds = async () => {
-      const itemsIds = await getDatabaseItemsIds(api);
-      return itemsIds;
+    const getDatabaseItems = async () => {
+      const ids = await getAllDatabaseItemsIds();
+      const allDatabaseItems = ids?.map(async (id) => getDatabaseItemById(id));
+      if (allDatabaseItems) {
+        Promise.all(allDatabaseItems).then(
+          (items) => items && setDatabaseItems(items as DatabaseItemModel[])
+        );
+      }
     };
-
-    const getDatabaseItemById = async (id: number) => {
-      const item = await getDatabaseItem(id, api);
-      return item;
-    };
-
-    getAllDatabaseItemsIds().then((ids) => {
-      ids?.forEach((id) => {
-        getDatabaseItemById(id).then((databaseItem) => {
-          if (databaseItem) {
-            allDatabaseItems.push(databaseItem);
-          }
-        });
-      });
-    });
-    setDatabaseItems(allDatabaseItems);
-  }, [api, dispatch]);
+    getDatabaseItems();
+  }, [getAllDatabaseItemsIds, getDatabaseItemById]);
 
   useEffect(() => {
     dispatch(setAllDatabaseItems(databaseItems));
   }, [databaseItems, databaseItems.length, dispatch]);
 
+  /*
   api?.query.system.events(async (events: EventRecord[]) => {
     events.forEach(async ({ event, phase }) => {
       if (api?.events.contracts.ContractEmitted.is(event)) {
@@ -117,7 +112,7 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
       }
     });
   });
-
+*/
   const computePlaceholderId = () => {
     const countItems = testDatabaseItems.length;
     if (countItems > 0) {
@@ -132,8 +127,9 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
       return;
     }
 
-    proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
-    // TODO: modify slices
+    if (api) {
+      proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+    }
   };
 
   const handleProposeModify = (id: number, text: string) => {
@@ -142,10 +138,11 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
       return;
     }
 
-    proposeModifyDatabaseItem(id, text, loggedAccount, api).then(() =>
-      setDatabaseItemDetailsDisplay(null)
-    );
-    // TODO: modify slices
+    if (api) {
+      proposeModifyDatabaseItem(id, text, loggedAccount, api).then(() =>
+        setDatabaseItemDetailsDisplay(null)
+      );
+    }
   };
 
   const displayFullDatabaseItem = (id: number) => {
