@@ -1,4 +1,4 @@
-version: '0.2'
+version: '3'
 services:
   shared_knowledge_dao:
     build: .
