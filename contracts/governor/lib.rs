@@ -14,14 +14,19 @@ pub mod governor {
     };
     
     use ink_env::{
-        call::FromAccountId,
+        call::{
+            ExecutionInput,
+            FromAccountId,
+            state::Salt,
+            utils::{Set, Unset},
+        },
         Error as InkEnvError,
     };
     use ink_lang::{
         codegen::EmitEvent, reflect::ContractEventBase,
         utils::initialize_contract, ToAccountId,
     };
-    use ink_prelude::{format, string::String};
+    use ink_prelude::{format, string::String, vec::Vec};
     use ink_storage::{
         traits::{PackedLayout, SpreadLayout, SpreadAllocate},
         Mapping,
@@ -155,17 +160,24 @@ pub mod governor {
 
     impl GovernorContract {
         #[ink(constructor)]
-        pub fn new(version: u8, quorum: Percentage, token_contract: AccountId, database_hash: Hash) -> Self {
-            let database_ref = DatabaseContractRef::new()
-                .code_hash(database_hash)
-                .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
-                .endowment(0)
-                .instantiate()
+        pub fn new(
+            version: u8,
+            token_owners: Vec<AccountId>,
+            quorum: Percentage,
+            token_hash: Hash,
+            database_hash: Hash
+        ) -> Self {
+            let token_contract = Self
+                ::instantiate_contract(TokenContractRef::new(token_owners), token_hash, version)
+                .unwrap_or_else(|error| {
+                    panic!("failed to instantiate the TokenContract: {:?}", error)
+                });
+            let database_contract = Self
+                ::instantiate_contract(DatabaseContractRef::new(), database_hash, version)
                 .unwrap_or_else(|error| {
                     panic!("failed to instantiate the DatabaseContract: {:?}", error)
                 });
-            let database_contract = <DatabaseContractRef as ToAccountId<super::governor::Environment>>
-                ::to_account_id(&database_ref);
+            
 
             initialize_contract(|instance: &mut Self| {
                 instance.quorum = num::clamp(quorum, 0, 100);
@@ -173,7 +185,7 @@ pub mod governor {
                 instance.database_contract = Some(database_contract);
             })
         }
-
+ 
         // For use in tests:
         // doesn't call TokenContract and DatabaseContract
         #[ink(constructor)]
@@ -294,6 +306,11 @@ pub mod governor {
         pub fn get_database(&self) -> Option<AccountId> {
             self.database_contract
         }
+        
+        #[ink(message)]
+        pub fn get_token(&self) -> Option<AccountId> {
+            self.token_contract
+        }
 
         #[ink(message)]
         pub fn get_proposals_count(&self) -> u32 {
@@ -369,6 +386,30 @@ pub mod governor {
         fn token_from_account_id(id: AccountId) -> TokenContractRef {
             <TokenContractRef as FromAccountId<super::governor::Environment>>
                 ::from_account_id(id)
+        }
+
+        fn instantiate_contract<TContract, TArgList>(
+            contract_builder: ink_env::call::CreateBuilder<
+                Environment,
+                Unset<Hash>,
+                Unset<u64>,
+                Unset<Balance>,
+                Set<ExecutionInput<TArgList>>,
+                Unset<Salt>,
+                TContract>,
+            code_hash: Hash,
+            version: u8,
+        ) -> Result<AccountId, InkEnvError>
+            where
+                TArgList: scale::Encode,
+                TContract: ToAccountId<Environment> + FromAccountId<Environment> {
+            let contract_ref = contract_builder
+                .code_hash(code_hash)
+                .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
+                .endowment(0)
+                .instantiate()?;
+            Ok(<TContract as ToAccountId<super::governor::Environment>>
+                ::to_account_id(&contract_ref))
         }
 
         fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {

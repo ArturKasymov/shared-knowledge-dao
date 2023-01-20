@@ -62,23 +62,6 @@ function deploy_governor_contract {
     echo "Governor code hash: ${GOVERNOR_CODE_HASH}"
 }
 
-function instantiate_token_contract {
-    cd "$CONTRACTS_PATH"/token
-    result=$(cargo contract instantiate \
-        --url "$NODE_URL" \
-        --suri "$AUTHORITY_SEED" \
-        --code-hash "$TOKEN_CODE_HASH" \
-        --constructor new \
-	    --args "[5G6Mx3WvwaxMCDv6fGEEtGDuFy6P6NozQcXGesde8dc1W6D1, 5H3L1ivDSCnFbYgvoBbugqMJMU9AKVovn1njLapYumugnAq4]")
-
-    if [ -n "$result" ]; then
-        echo "$result" > token.out
-    fi
-    
-    TOKEN_ADDRESS=$(echo "$result" | grep -A2 "Event Contracts ➜ Instantiated" | grep contract | tail -1 | cut -d ' ' -f12)
-    echo "Token address: ${TOKEN_ADDRESS}"
-}
-
 function instantiate_governor_contract {
     cd "$CONTRACTS_PATH"/governor
     result=$(cargo contract instantiate \
@@ -86,7 +69,8 @@ function instantiate_governor_contract {
         --suri "$AUTHORITY_SEED" \
         --code-hash "$GOVERNOR_CODE_HASH" \
         --constructor new \
-	--args 0 25 "$TOKEN_ADDRESS" "$DATABASE_CODE_HASH")
+	      --args 0 "[5G6Mx3WvwaxMCDv6fGEEtGDuFy6P6NozQcXGesde8dc1W6D1, 5H3L1ivDSCnFbYgvoBbugqMJMU9AKVovn1njLapYumugnAq4]" \
+          25 "$TOKEN_CODE_HASH" "$DATABASE_CODE_HASH")
     
     if [ -n "$result" ]; then
         echo "$result" > governor.out
@@ -108,6 +92,20 @@ function instantiate_governor_contract {
     
     DATABASE_ADDRESS=$(echo "$result" | grep Data | grep -Poe "Some\(\K[a-zA-Z0-9]+")
     echo "Database address: ${DATABASE_ADDRESS}"
+    
+    result=$(cargo contract call \
+        --url "$NODE_URL" \
+        --suri "$AUTHORITY_SEED" \
+        --contract "$GOVERNOR_ADDRESS" \
+	--dry-run \
+	-m get_token)
+    
+    if [ -n "$result" ]; then
+        echo "$result" > "$CONTRACTS_PATH"/database/database.out
+    fi
+    
+    TOKEN_ADDRESS=$(echo "$result" | grep Data | grep -Poe "Some\(\K[a-zA-Z0-9]+")
+    echo "Token address: ${TOKEN_ADDRESS}"
 }
 
 log_progress "Building Token contract"
@@ -127,9 +125,6 @@ deploy_database_contract || error "Failed to deploy contract"
 
 log_progress "Deploying Governor contract"
 deploy_governor_contract || error "Failed to deploy contract"
-
-log_progress "Instantiating Token contract"
-instantiate_token_contract || error "Failed to instantiate contract"
 
 log_progress "Instantiating Governor contract"
 instantiate_governor_contract || error "Failed to instantiate contract"
