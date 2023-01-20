@@ -1,6 +1,6 @@
 [package]
 name = "database"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
@@ -16,7 +16,7 @@ ink_engine = { version = "3.4.0", default-features = false, optional = true }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp22"] }
+openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["ownable"] }
 
 nameof = "1.2.2"
 

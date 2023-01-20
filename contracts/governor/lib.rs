@@ -324,7 +324,7 @@ pub mod governor {
                         let mut database = Self::database_from_account_id(database_contract);
                         match kind {
                             ProposalDatabaseKind::Add =>
-                                return Ok(Some(database.add_item(item.clone()))),
+                                return Ok(Some(database.add_item(item.clone())?)),
                             ProposalDatabaseKind::Modify(item_id) => {
                                 database.modify_item(*item_id, item.clone())?;
                             }

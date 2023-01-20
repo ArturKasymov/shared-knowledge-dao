@@ -1,8 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![feature(min_specialization)]
 
-use ink_lang as ink;
-
-#[ink::contract]
+#[openbrush::contract]
 pub mod database {
     
     use ink_lang::{
@@ -15,10 +14,23 @@ pub mod database {
         Mapping,
     };
 
+    use openbrush::{
+        contracts::ownable::*,
+        modifiers,
+        traits::Storage,
+    };
+
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum DatabaseError {
         IdNotFound,
+        NoAccess(OwnableError),
+    }
+
+    impl From<OwnableError> for DatabaseError {
+        fn from(e: OwnableError) -> Self {
+            DatabaseError::NoAccess(e)
+        }
     }
 
     type Event = <DatabaseContract as ContractEventBase>::Type;
@@ -27,29 +39,37 @@ pub mod database {
     pub type Item = String;
 
     #[ink(storage)]
-    #[derive(SpreadAllocate)]
+    #[derive(Default, SpreadAllocate, Storage)]
     pub struct DatabaseContract {
+        #[storage_field]
+        ownable: ownable::Data,
         items: Mapping<ItemId, Item>,
         next_item_id: ItemId,
     }
 
+    impl Ownable for DatabaseContract {}
+
     impl DatabaseContract {
         #[ink(constructor)]
         pub fn new() -> Self {
-            initialize_contract(|_| { })
+            initialize_contract(|instance: &mut Self| {
+                instance._init_with_owner(Self::env().caller());
+            })
         }
 
         // Adds the item to the database, and returns its ID
         #[ink(message)]
-        pub fn add_item(&mut self, item: Item) -> ItemId {
+        #[modifiers(only_owner)]
+        pub fn add_item(&mut self, item: Item) -> Result<ItemId, DatabaseError> {
             let id = self.next_item_id();
             self.items.insert(id, &item);
             Self::emit_event(Self::env(), Event::ItemAdded(ItemAdded { id }));
-            id
+            Ok(id)
         }
 
         // Overwrites the item identified by the given ID with the new item
         #[ink(message)]
+        #[modifiers(only_owner)]
         pub fn modify_item(&mut self, id: ItemId, item: Item) -> Result<(), DatabaseError> {
             match self.items.get(id) {
                 None => return Err(DatabaseError::IdNotFound),
@@ -112,8 +132,8 @@ pub mod database {
         use ink_lang as ink;
 
         use ink_env::test::{
-            recorded_events,
-            EmittedEvent,
+            default_accounts, recorded_events,
+            DefaultAccounts, EmittedEvent,
         };
         use scale::Decode;
         use nameof::name_of_type;
@@ -127,14 +147,14 @@ pub mod database {
         #[ink::test]
         fn add_item_works() {
             let mut database = DatabaseContract::new();
-            assert_eq!(database.add_item("1".to_string()), 0);
-            assert_eq!(database.add_item("2".to_string()), 1);
+            assert_eq!(database.add_item("1".to_string()), Ok(0));
+            assert_eq!(database.add_item("2".to_string()), Ok(1));
         }
 
         #[ink::test]
         fn modify_item_works() {
             let mut database = DatabaseContract::new();
-            database.add_item("1".to_string());
+            database.add_item("1".to_string()).ok();
             assert!(database.modify_item(0, "2".to_string()).is_ok(), "modifying was expected to succeed");
         }
 
@@ -151,9 +171,44 @@ pub mod database {
         }
 
         #[ink::test]
+        fn add_nonowner_fails() {
+            let accounts = get_default_test_accounts();
+            set_caller(accounts.alice);
+
+            let mut database = DatabaseContract::new();
+
+            set_caller(accounts.bob);
+            assert!(
+                matches!(
+                    database.add_item("test".to_string()),
+                    Result::Err(DatabaseError::NoAccess(_))
+                ),
+                "Bob expected to not have call access"
+            );
+        }
+
+        #[ink::test]
+        fn modify_nonowner_fails() {
+            let accounts = get_default_test_accounts();
+            set_caller(accounts.alice);
+
+            let mut database = DatabaseContract::new();
+            database.add_item("1".to_string()).ok();
+
+            set_caller(accounts.bob);
+            assert!(
+                matches!(
+                    database.modify_item(0, "2".to_string()),
+                    Result::Err(DatabaseError::NoAccess(_))
+                ),
+                "Bob expected to not have call access"
+            );
+        }
+
+        #[ink::test]
         fn event_on_add_item() {
             let mut database = DatabaseContract::new();
-            database.add_item("test".to_string());
+            database.add_item("test".to_string()).ok();
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_add_event(
                 &recorded_events[0],
@@ -164,7 +219,7 @@ pub mod database {
         #[ink::test]
         fn event_on_modify_item() {
             let mut database = DatabaseContract::new();
-            database.add_item("1".to_string());
+            database.add_item("1".to_string()).ok();
             database.modify_item(0, "2".to_string()).ok();
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_modify_event(
@@ -199,6 +254,14 @@ pub mod database {
             } else {
                 panic!("encountered unexpected event kind: expected {}", name_of_type!(ItemModified));
             };
+        }
+
+        fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
+            default_accounts::<ink_env::DefaultEnvironment>()
+        }
+
+        fn set_caller(caller: AccountId) {
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
         }
     }
 }
