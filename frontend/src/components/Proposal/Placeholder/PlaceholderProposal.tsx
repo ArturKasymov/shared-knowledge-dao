@@ -25,13 +25,13 @@ interface PlaceholderProposalProps {
 }
 
 const PlaceholderProposal = ({ onClick }: PlaceholderProposalProps): JSX.Element => (
-  <ProposalTemplate action="A">
+  <ProposalTemplate action="A" isExecuted={false}>
     <ProposalContent role="presentation" onClick={onClick}>
       +PROPOSE
     </ProposalContent>
   </ProposalTemplate>
 );
 
-const MemoizedPlaceholderProposal= React.memo(PlaceholderProposal);
+const MemoizedPlaceholderProposal = React.memo(PlaceholderProposal);
 
 export default MemoizedPlaceholderProposal;

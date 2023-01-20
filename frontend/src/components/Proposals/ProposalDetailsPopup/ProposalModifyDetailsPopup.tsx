@@ -59,9 +59,8 @@ interface ProposalModifyDetailsPopupProps {
   currentItem: string;
   proposedItem: string;
   votes: number;
-  hasSelfVoted: boolean;
-  isExecuted: boolean;
-  isUserLoggedIn: boolean;
+  canVote: boolean;
+  canExecute: boolean;
   onPopupClose: () => void;
   onVote: (id: number) => void;
   onExecute: (id: number) => void;
@@ -73,20 +72,17 @@ const ProposalModifyDetailsPopup = ({
   currentItem,
   proposedItem,
   votes,
-  hasSelfVoted,
-  isExecuted,
-  isUserLoggedIn,
+  canVote,
+  canExecute,
   onPopupClose,
   onVote,
   onExecute,
 }: ProposalModifyDetailsPopupProps): JSX.Element => (
-  // TODO: maybe disable vote/execute button when wallet not connected?
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
-    hasSelfVoted={hasSelfVoted}
-    isExecuted={isExecuted}
-    isUserLoggedIn={isUserLoggedIn}
+    canVote={canVote}
+    canExecute={canExecute}
     onPopupClose={onPopupClose}
     onVote={onVote}
     onExecute={onExecute}

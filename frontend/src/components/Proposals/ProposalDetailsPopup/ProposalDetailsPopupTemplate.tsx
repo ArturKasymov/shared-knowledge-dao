@@ -80,9 +80,8 @@ interface ProposalDetailsPopupTemplateProps {
   children: React.ReactNode;
   id: number;
   votes: number;
-  hasSelfVoted: boolean;
-  isExecuted: boolean;
-  isUserLoggedIn: boolean;
+  canVote: boolean;
+  canExecute: boolean;
   onPopupClose: () => void;
   onVote: (id: number) => void;
   onExecute: (id: number) => void;
@@ -92,9 +91,8 @@ const ProposalDetailsPopupTemplate = ({
   children,
   id,
   votes,
-  hasSelfVoted,
-  isExecuted,
-  isUserLoggedIn,
+  canVote,
+  canExecute,
   onPopupClose,
   onVote,
   onExecute,
@@ -117,18 +115,13 @@ const ProposalDetailsPopupTemplate = ({
             <button
               type="button"
               className="execute"
-              disabled={isExecuted || !isUserLoggedIn}
+              disabled={!canExecute}
               onClick={() => onExecute(id)}
             >
               Execute
             </button>
 
-            <button
-              type="button"
-              className="vote"
-              disabled={hasSelfVoted || !isUserLoggedIn}
-              onClick={() => onVote(id)}
-            >
+            <button type="button" className="vote" disabled={!canVote} onClick={() => onVote(id)}>
               Vote
             </button>
           </ButtonsContainer>

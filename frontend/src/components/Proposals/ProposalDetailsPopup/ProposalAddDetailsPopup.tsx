@@ -38,9 +38,8 @@ interface ProposalAddDetailsPopupProps {
   id: number;
   item: string;
   votes: number;
-  hasSelfVoted: boolean;
-  isExecuted: boolean;
-  isUserLoggedIn: boolean;
+  canVote: boolean;
+  canExecute: boolean;
   onPopupClose: () => void;
   onVote: (id: number) => void;
   onExecute: (id: number) => void;
@@ -50,9 +49,8 @@ const ProposalAddDetailsPopup = ({
   id,
   item,
   votes,
-  hasSelfVoted,
-  isExecuted,
-  isUserLoggedIn,
+  canVote,
+  canExecute,
   onPopupClose,
   onVote,
   onExecute,
@@ -60,9 +58,8 @@ const ProposalAddDetailsPopup = ({
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
-    hasSelfVoted={hasSelfVoted}
-    isExecuted={isExecuted}
-    isUserLoggedIn={isUserLoggedIn}
+    canVote={canVote}
+    canExecute={canExecute}
     onPopupClose={onPopupClose}
     onVote={onVote}
     onExecute={onExecute}

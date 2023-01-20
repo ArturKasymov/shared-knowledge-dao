@@ -10,6 +10,7 @@ import { ProposalAdd, ProposalModify } from 'components/Proposal';
 import { displayErrorToast } from 'components/NotificationToast';
 import ToggleSwitch from 'components/ToggleSwitch';
 import SmoothOptional from 'components/SmoothOptional';
+import PlaceholderProposal from 'components/Proposal/Placeholder';
 
 import { ErrorToastMessages } from 'shared/constants';
 import { RootState } from 'redux/store';
@@ -19,18 +20,17 @@ import {
   onVoted as updateProposalSelfVoted,
   onExecuted as updateProposalExecuted,
 } from 'redux/slices/proposalsSlice';
-import PlaceholderProposal from 'components/DatabaseItem/Placeholder';
 import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
-import { Proposal as ProposalModel } from 'utils/model/proposal';
+import { isQuorumReached, Proposal as ProposalModel } from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
+import { proposeAddItem as proposeAddDatabaseItem } from 'utils/proposeDatabase';
 
 import { ProposalAddDetailsPopup, ProposalModifyDetailsPopup } from './ProposalDetailsPopup';
-import DatabaseProposeNewItemPopup from "../Database/DatabaseProposeNewItemPopup";
-import {proposeAddItem as proposeAddDatabaseItem} from "utils/proposeDatabase";
+import DatabaseProposeNewItemPopup from '../Database/DatabaseProposeNewItemPopup';
 
 const Wrapper = styled.div`
   color: ${({ theme }) => theme.colors.white};
@@ -130,7 +130,6 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-
   const handleProposeAdd = (text: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
@@ -176,6 +175,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   };
 
   const proposalToPopup = (proposal: ProposalModel) => {
+    const canVote = !!loggedAccount && !proposal.hasSelfVoted;
+    const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
     switch (proposal.kind) {
       case 'itemAdd':
         return (
@@ -183,9 +184,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             id={proposal.id}
             item={proposal.item}
             votes={proposal.votes}
-            hasSelfVoted={proposal.hasSelfVoted}
-            isExecuted={proposal.executed}
-            isUserLoggedIn={!!loggedAccount}
+            canVote={canVote}
+            canExecute={canExecute}
             onPopupClose={() => setProposalDetailsDisplay(null)}
             onVote={handleVote}
             onExecute={handleExecute}
@@ -204,9 +204,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             }
             proposedItem={proposal.item}
             votes={proposal.votes}
-            hasSelfVoted={proposal.hasSelfVoted}
-            isExecuted={proposal.executed}
-            isUserLoggedIn={!!loggedAccount}
+            canVote={canVote}
+            canExecute={canExecute}
             onPopupClose={() => setProposalDetailsDisplay(null)}
             onVote={handleVote}
             onExecute={handleExecute}
@@ -215,8 +214,6 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  // TODO: disable vote button if already voted
-  // TODO: disable execute button if not enough votes
   return (
     <>
       {proposeNewItemDisplay && (
@@ -238,9 +235,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
                 {proposalToReactNode(p)}
               </SmoothOptional>
             ))}
-            <PlaceholderProposal
-              onClick={() => setProposeNewItemDisplay(true)}
-            />
+            <PlaceholderProposal onClick={() => setProposeNewItemDisplay(true)} />
           </ProposalsContainer>
         </Wrapper>
       </Layout>

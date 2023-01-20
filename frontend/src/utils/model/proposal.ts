@@ -6,6 +6,7 @@ interface ProposalBase {
   votes: number;
   hasSelfVoted: boolean;
   executed: boolean;
+  quorum: number;
 }
 
 export type ProposalItemAdd = ProposalBase & {
@@ -20,3 +21,6 @@ export type ProposalItemModify = ProposalBase & {
 };
 
 export type Proposal = ProposalItemAdd | ProposalItemModify;
+
+export const isQuorumReached = (proposal: ProposalBase): boolean =>
+  proposal.votes >= proposal.quorum;

@@ -11,7 +11,7 @@ import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 import governorMetadata from '../metadata/governor_metadata.json';
 import addresses from '../metadata/addresses.json';
 
-type RawProposal = DistributiveOmit<Proposal, 'votes' | 'hasSelfVoted'>;
+type RawProposal = DistributiveOmit<Proposal, 'votes' | 'hasSelfVoted' | 'quorum'>;
 
 const getRawProposal = async (
   id: number,
@@ -118,6 +118,21 @@ const getHasVoted = async (
   return false;
 };
 
+const getQuorum = async (contract: ContractPromise): Promise<number> => {
+  const { result, output } = await contract.query.getQuorum(contract.address, {
+    gasLimit: GAS_LIMIT_VALUE,
+  });
+
+  if (result.isOk && output) {
+    return output.toPrimitive() as number;
+  }
+
+  if (result.isErr) {
+    displayErrorToast(ErrorToastMessages.ERROR_FETCHING_DATA);
+  }
+  return 100;
+};
+
 export const getProposal = async (
   id: number,
   loggedUser: InjectedAccountWithMeta | null,
@@ -125,13 +140,14 @@ export const getProposal = async (
 ): Promise<Proposal | null> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
 
-  const [proposal, votes, hasSelfVoted] = await Promise.all([
+  const [proposal, votes, hasSelfVoted, quorum] = await Promise.all([
     getRawProposal(id, contract),
     getProposalVotes(id, contract),
     getHasVoted(id, loggedUser?.address, contract),
+    getQuorum(contract),
   ]);
 
   if (!proposal) return null;
 
-  return { ...proposal, votes, hasSelfVoted };
+  return { ...proposal, votes, hasSelfVoted, quorum };
 };
