@@ -10,61 +10,33 @@ import { getInjector } from 'utils/common';
 import {
   isGovernorEvent,
   decodeGovernorEvent,
-  ProposalAddedEvent,
+  ProposalExecutedEvent,
 } from 'utils/decodeGovernorEvent';
 
 import governorMetadata from '../metadata/governor_metadata.json';
 import addresses from '../metadata/addresses.json';
 
-const handleProposalAddedEvent = (
+const handleProposalExecutedEvent = (
   events: EventRecord[],
   status: ExtrinsicStatus,
   api: ApiPromise
 ) => {
-  const proposalAddedEvent = events
+  const proposalExecutedEvent = events
     .filter(({ event }) => api.events.contracts.ContractEmitted.is(event) && isGovernorEvent(event))
     .map(({ event }) => decodeGovernorEvent(event))
-    .find((event) => event instanceof ProposalAddedEvent) as ProposalAddedEvent;
+    .find((event) => event instanceof ProposalExecutedEvent) as ProposalExecutedEvent;
   // TODO: handle GovernorErrors
 
-  if (status.type === 'InBlock' && proposalAddedEvent) {
-    console.log(proposalAddedEvent);
-    displaySuccessToast(SuccessToastMessages.PROPOSAL_ADDED);
+  if (status.type === 'InBlock' && proposalExecutedEvent) {
+    console.log(proposalExecutedEvent);
+    displaySuccessToast(SuccessToastMessages.PROPOSAL_EXECUTED);
   } else if (events.some(({ event: { method } }) => method === 'ExtrinsicFailed')) {
     displayErrorToast(`${ErrorToastMessages.CUSTOM} ExtrinsicFailed.`);
   }
 };
 
-export const proposeAddItem = async (
-  text: string,
-  loggedUser: InjectedAccountWithMeta,
-  api: ApiPromise
-): Promise<void> => {
-  const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
-  const injector = await getInjector(loggedUser);
-  if (!injector) {
-    return;
-  }
-
-  await contract.tx
-    .proposeAdd(
-      {
-        gasLimit: GAS_LIMIT_VALUE,
-      },
-      text,
-      '' // description
-    )
-    .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) =>
-      handleProposalAddedEvent(events, status, api)
-    )
-    .catch((error) => {
-      displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
-    });
-};
-
-export const proposeModifyItem = async (
+export const executeProposal = async (
   id: number,
-  text: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise
 ): Promise<void> => {
@@ -75,16 +47,14 @@ export const proposeModifyItem = async (
   }
 
   await contract.tx
-    .proposeModify(
+    .execute(
       {
         gasLimit: GAS_LIMIT_VALUE,
       },
-      id,
-      text,
-      '' // description
+      id
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) =>
-      handleProposalAddedEvent(events, status, api)
+      handleProposalExecutedEvent(events, status, api)
     )
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);

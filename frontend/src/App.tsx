@@ -7,6 +7,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 import './App.css';
 import { displayErrorToast } from 'components/NotificationToast';
 import Database from 'components/Database';
+import Proposals from 'components/Proposals';
 
 import formatChainStringToNumber from 'utils/formatChainStringToNumber';
 import { ErrorToastMessages } from 'shared/constants/index';
@@ -47,9 +48,10 @@ const App = (): JSX.Element => {
   return (
     <ReduxProvider store={store}>
       <IntercomProvider appId={INTERCOM_APP_ID} autoBoot>
-        <Router>
+        <Router basename="/dao">
           <Routes>
             <Route path="/database" element={<Database api={api} />} />
+            <Route path="/proposals" element={<Proposals api={api} />} />
             <Route path="*" element={<Navigate to="/database" replace />} />
           </Routes>
         </Router>

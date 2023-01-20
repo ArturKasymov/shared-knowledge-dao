@@ -286,8 +286,23 @@ pub mod governor {
         }
 
         #[ink(message)]
+        pub fn get_quorum(&self) -> Percentage {
+            self.quorum
+        }
+
+        #[ink(message)]
         pub fn get_database(&self) -> Option<AccountId> {
             self.database_contract
+        }
+
+        #[ink(message)]
+        pub fn get_proposals_count(&self) -> u32 {
+            self.next_proposal_id
+        }
+        
+        #[ink(message)]
+        pub fn get_vote_weight(&self, account: AccountId) -> Percentage {
+            self.account_weight(account)
         }
 
         // (For testing) Deletes the contract from the blockchain.

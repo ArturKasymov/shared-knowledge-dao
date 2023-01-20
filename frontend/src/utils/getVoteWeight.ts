@@ -3,36 +3,29 @@ import { ApiPromise } from '@polkadot/api';
 
 import { displayErrorToast } from 'components/NotificationToast';
 
+import { InjectedAccountWithMeta } from 'redux/slices/walletAccountsSlice';
 import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 
-import databaseMetadata from '../metadata/database_metadata.json';
+import governorMetadata from '../metadata/governor_metadata.json';
 import addresses from '../metadata/addresses.json';
 
-export type DatabaseItem = {
-  id: number;
-  text: string;
-};
+export const getVoteWeight = async (account: string, api: ApiPromise): Promise<number> => {
+  const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
 
-export const getDatabaseItem = async (
-  id: number,
-  api: ApiPromise
-): Promise<DatabaseItem | null> => {
-  const contract = new ContractPromise(api, databaseMetadata, addresses.database_address);
-  const { result, output } = await contract.query.getById(
+  const { result, output } = await contract.query.getVoteWeight(
     contract.address,
     {
       gasLimit: GAS_LIMIT_VALUE,
     },
-    id
+    account
   );
 
   if (result.isOk && output) {
-    const text = output.toString();
-    return { id, text } as DatabaseItem;
+    return output.toPrimitive() as number;
   }
 
   if (result.isErr) {
     displayErrorToast(ErrorToastMessages.ERROR_FETCHING_DATA);
   }
-  return null;
+  return 0;
 };

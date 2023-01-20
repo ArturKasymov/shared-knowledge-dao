@@ -10,9 +10,10 @@ module.exports = {
     },
     ecmaVersion: 12,
     sourceType: 'module',
+    project: ['./tsconfig.json'],
   },
   parser: '@typescript-eslint/parser',
-  plugins: ['prettier'],
+  plugins: ['prettier', '@typescript-eslint'],
   rules: {
     'no-use-before-define': 'off',
     // https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-use-before-define.md
@@ -52,6 +53,10 @@ module.exports = {
     ],
     'max-classes-per-file': 0,
     'no-useless-constructor': 0,
+    "@typescript-eslint/switch-exhaustiveness-check": ['warn'],
+    "default-case": 'off',
+    "consistent-return": ['warn'],
+    "no-case-declarations": 'off',
   },
   extends: ['airbnb', 'airbnb/hooks', 'plugin:@typescript-eslint/recommended', 'prettier'],
   settings: {

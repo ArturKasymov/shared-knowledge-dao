@@ -33,6 +33,7 @@ NODE_URL=wss://ws-smartnet.test.azero.dev
 AUTHORITY_SEED="$1"
 
 CONTRACTS_PATH=$(pwd)/contracts
+FRONTEND_PATH=$(pwd)/frontend
 
 function build_contract {
     cd "$CONTRACTS_PATH"/"$1" 
@@ -152,3 +153,10 @@ jq -n \
 
 log_progress "Finished initialization. See addresses in $(pwd)/addresses.json"
 
+log_progress "Copying metadata to frontend/..."
+
+mkdir -p "$FRONTEND_PATH"/src/metadata
+cp "$CONTRACTS_PATH"/addresses.json "$FRONTEND_PATH"/src/metadata || error "Please deploy the contracts first (addresses.json not found)"
+cp "$CONTRACTS_PATH"/token/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/token_metadata.json || error "Please build Token contract first (metadata.json not found)"
+cp "$CONTRACTS_PATH"/database/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/database_metadata.json || error "Please build Database contract first (metadata.json not found)"
+cp "$CONTRACTS_PATH"/governor/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/governor_metadata.json || error "Please build Governor contract first (metadata.json not found)"

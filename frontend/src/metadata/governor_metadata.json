@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xe80644e99ee39f366ca0dae77792b21ede223ad8721f3ff7a5e5d3b359ca2555",
+    "hash": "0x3ecd886b895c190d4b51aa1a388d29ece1c9d271bdfff329819c99df7a1c4532",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -382,6 +382,20 @@
         {
           "args": [],
           "docs": [],
+          "label": "get_quorum",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Percentage"
+            ],
+            "type": 3
+          },
+          "selector": "0xa4829457"
+        },
+        {
+          "args": [],
+          "docs": [],
           "label": "get_database",
           "mutates": false,
           "payable": false,
@@ -392,6 +406,44 @@
             "type": 27
           },
           "selector": "0xb6d7113d"
+        },
+        {
+          "args": [],
+          "docs": [],
+          "label": "get_proposals_count",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "u32"
+            ],
+            "type": 1
+          },
+          "selector": "0xd16cf853"
+        },
+        {
+          "args": [
+            {
+              "label": "account",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_vote_weight",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Percentage"
+            ],
+            "type": 3
+          },
+          "selector": "0x1e9b6438"
         },
         {
           "args": [],

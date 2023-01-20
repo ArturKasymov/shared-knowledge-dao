@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 
 import { displayErrorToast } from 'components/NotificationToast';
 
-import { queries } from 'shared/layout';
-import { ReactComponent as WalletIcon } from 'assets/WalletIcon.svg';
 import {
   connectWallet,
   disconnectWallet,
   updateAllAccounts,
 } from 'redux/slices/walletAccountsSlice';
-import { ErrorToastMessages, APP_NAME } from 'shared/constants/index';
+import { RootState } from 'redux/store';
 import getWalletAddressShort from 'utils/getWalletAddressShort';
+import { queries } from 'shared/layout';
+import { ReactComponent as WalletIcon } from 'assets/WalletIcon.svg';
+import { ErrorToastMessages, APP_NAME } from 'shared/constants/index';
 import { ReactComponent as ChevronDownIcon } from 'assets/ChevronDown.svg';
 
 const WalletButtonStyling = styled.button`
@@ -131,21 +132,32 @@ const WalletButton = ({
   const [isTooltipOpen, setIsTooltipOpen] = useState<boolean>(false);
   const dispatch = useDispatch();
 
-  const pluginTextWithLink = (
-    <span>
-      {ErrorToastMessages.NO_EXTENSION} The plugin can be found&nbsp;
-      <a href="https://polkadot.js.org/extension/" target="_blank" rel="noreferrer">
-        <span className="message-link">here</span>.
-      </a>
-    </span>
+  const pluginTextWithLink = useMemo(
+    () => (
+      <span>
+        {ErrorToastMessages.NO_EXTENSION} The plugin can be found&nbsp;
+        <a href="https://polkadot.js.org/extension/" target="_blank" rel="noreferrer">
+          <span className="message-link">here</span>.
+        </a>
+      </span>
+    ),
+    []
   );
 
-  const walletExtensionSetup = async (): Promise<void> => {
+  const enableExtension = useCallback(async () => {
     const extension = await web3Enable(APP_NAME);
     if (extension.length === 0) {
       displayErrorToast(pluginTextWithLink);
-      return;
+      throw new Error(ErrorToastMessages.NO_EXTENSION);
     }
+  }, [pluginTextWithLink]);
+
+  useEffect(() => {
+    if (loggedAccountAddress) enableExtension().then();
+  }, [loggedAccountAddress, enableExtension]);
+
+  const walletExtensionSetup = async (): Promise<void> => {
+    await enableExtension();
 
     const accounts = await web3Accounts();
     dispatch(updateAllAccounts(accounts));

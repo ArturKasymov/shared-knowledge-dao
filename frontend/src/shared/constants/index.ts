@@ -14,4 +14,6 @@ export enum ErrorToastMessages {
 
 export enum SuccessToastMessages {
   PROPOSAL_ADDED = 'Your proposal was successfully added to the pool. Now ask your friends to vote :)',
+  VOTE_CASTED = 'Your vote was successfully submitted. Now wait till the quorum for this proposal is reached :)',
+  PROPOSAL_EXECUTED = 'The proposal was successfully executed. Thanks for your contribution :)',
 }
