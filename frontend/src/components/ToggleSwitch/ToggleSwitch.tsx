@@ -4,8 +4,10 @@ import styled from 'styled-components';
 const Wrapper = styled.label`
   cursor: pointer;
   display: inline-block;
-  
-  *, *:before, *:after {
+
+  *,
+  *:before,
+  *:after {
     box-sizing: border-box;
   }
 
@@ -32,7 +34,8 @@ const Wrapper = styled.label`
     vertical-align: middle;
     transition: background 0.25s;
 
-    &:before, &:after {
+    &:before,
+    &:after {
       content: '';
     }
 
@@ -49,7 +52,7 @@ const Wrapper = styled.label`
       transition: left 0.25s;
     }
   }
-  
+
   &:hover div.toggle-switch:before {
     background: linear-gradient(to bottom, #fff 0%, #fff 100%);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
@@ -69,8 +72,12 @@ interface ToggleSwitchProps {
 
 const ToggleSwitch = ({ checked, onChange }: ToggleSwitchProps) => (
   <Wrapper>
-    <input type="checkbox" className="toggle-checkbox"
-      checked={checked} onChange={e => onChange(e.target.checked)} />
+    <input
+      type="checkbox"
+      className="toggle-checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+    />
     <div className="toggle-switch" />
     <span className="toggle-label">Show executed</span>
   </Wrapper>

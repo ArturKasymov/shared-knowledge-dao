@@ -15,12 +15,14 @@ import { ErrorToastMessages } from 'shared/constants';
 import { RootState } from 'redux/store';
 import {
   setAllProposals,
+  setSelfVoteWeight,
   onVoted as updateProposalSelfVoted,
   onExecuted as updateProposalExecuted,
 } from 'redux/slices/proposalsSlice';
 import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
+import { getVoteWeight } from 'utils/getVoteWeight';
 import { Proposal as ProposalModel } from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
@@ -39,7 +41,7 @@ const Wrapper = styled.div`
 `;
 
 const ProposalsContainer = styled.div`
-  width:75%;
+  width: 75%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -70,6 +72,11 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     [loggedAccount, api]
   );
 
+  const getSelfVoteWeight = useCallback(
+    async () => api && loggedAccount && getVoteWeight(loggedAccount.address, api),
+    [loggedAccount, api]
+  );
+
   useEffect(() => {
     const getProposals = async () => {
       const ids = await getAllProposalsIds();
@@ -84,6 +91,13 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   useEffect(() => {
     dispatch(setAllProposals(proposals));
   }, [proposals, dispatch]);
+
+  useEffect(() => {
+    (async () => {
+      const selfVoteWeight = await getSelfVoteWeight();
+      dispatch(setSelfVoteWeight(selfVoteWeight));
+    })();
+  }, [getSelfVoteWeight, dispatch]);
 
   const handleVote = (proposalId: number) => {
     if (!loggedAccount) {
@@ -194,16 +208,15 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
       <Layout>
         <Wrapper className="wrapper">
           <HeroHeading variant="proposals" />
-            <div className="toggle-switch-wrapper">
-              <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
-            </div>
+          <div className="toggle-switch-wrapper">
+            <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
+          </div>
           <ProposalsContainer>
-            {testProposals
-              .map((p) =>
-                <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
-                  {proposalToReactNode(p)}
-                </SmoothOptional>
-            )}
+            {testProposals.map((p) => (
+              <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
+                {proposalToReactNode(p)}
+              </SmoothOptional>
+            ))}
           </ProposalsContainer>
         </Wrapper>
       </Layout>
