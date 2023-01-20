@@ -48,7 +48,7 @@ const App = (): JSX.Element => {
   return (
     <ReduxProvider store={store}>
       <IntercomProvider appId={INTERCOM_APP_ID} autoBoot>
-        <Router>
+        <Router basename='/dao'>
           <Routes>
             <Route path="/database" element={<Database api={api} />} />
             <Route path="/proposals" element={<Proposals api={api} />} />

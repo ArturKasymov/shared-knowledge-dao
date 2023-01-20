@@ -19,6 +19,7 @@ import {
   onVoted as updateProposalSelfVoted,
   onExecuted as updateProposalExecuted,
 } from 'redux/slices/proposalsSlice';
+import PlaceholderProposal from 'components/DatabaseItem/Placeholder';
 import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
@@ -28,6 +29,8 @@ import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
 
 import { ProposalAddDetailsPopup, ProposalModifyDetailsPopup } from './ProposalDetailsPopup';
+import DatabaseProposeNewItemPopup from "../Database/DatabaseProposeNewItemPopup";
+import {proposeAddItem as proposeAddDatabaseItem} from "utils/proposeDatabase";
 
 const Wrapper = styled.div`
   color: ${({ theme }) => theme.colors.white};
@@ -65,7 +68,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
   const [showExecutedProposals, setShowExecutedProposals] = useState(false);
   const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalModel | null>(null);
-
+  const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
   const getAllProposalsIds = useCallback(async () => api && getProposalsIds(api), [api]);
   const getProposalById = useCallback(
     async (id: number) => api && getProposal(id, loggedAccount, api),
@@ -124,6 +127,18 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         setProposalDetailsDisplay(null);
         dispatch(updateProposalExecuted(proposalId));
       });
+    }
+  };
+
+
+  const handleProposeAdd = (text: string) => {
+    if (!loggedAccount) {
+      displayErrorToast(ErrorToastMessages.NO_WALLET);
+      return;
+    }
+
+    if (api) {
+      proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
     }
   };
 
@@ -204,6 +219,12 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   // TODO: disable execute button if not enough votes
   return (
     <>
+      {proposeNewItemDisplay && (
+        <DatabaseProposeNewItemPopup
+          onPopupClose={() => setProposeNewItemDisplay(false)}
+          onItemPropose={handleProposeAdd}
+        />
+      )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
       <Layout>
         <Wrapper className="wrapper">
@@ -217,6 +238,9 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
                 {proposalToReactNode(p)}
               </SmoothOptional>
             ))}
+            <PlaceholderProposal
+              onClick={() => setProposeNewItemDisplay(true)}
+            />
           </ProposalsContainer>
         </Wrapper>
       </Layout>

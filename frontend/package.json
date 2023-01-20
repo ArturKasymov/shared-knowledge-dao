@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "homepage": "/dao",
   "private": true,
   "dependencies": {
     "@polkadot/api": "^9.11.3",
