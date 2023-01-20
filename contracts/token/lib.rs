@@ -7,13 +7,19 @@ pub mod token {
     use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
-        contracts::psp34::extensions::burnable::*,
+        contracts::{
+            ownable::*,
+            psp34::extensions::burnable::*,
+        },
+        modifiers,
         traits::Storage,
     };
 
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
     pub struct TokenContract {
+        #[storage_field]
+        ownable: ownable::Data,
         #[storage_field]
         psp34: psp34::Data,
         next_id: u8,
@@ -26,6 +32,7 @@ pub mod token {
         #[ink(constructor)]
         pub fn new(owners: Vec<AccountId>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
+                instance._init_with_owner(Self::env().caller());
                 instance.next_id = owners.len() as u8;
                 for (i, account) in owners.iter().enumerate() {
                     instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
@@ -34,6 +41,7 @@ pub mod token {
         }
 
         #[ink(message)]
+        #[modifiers(only_owner)]
         pub fn mint(&mut self, recipient: AccountId) -> Result<Id, PSP34Error> {
             let id = self.next_id();
             self._mint_to(recipient, Id::U8(id))?;
@@ -81,6 +89,17 @@ pub mod token {
         }
 
         #[ink::test]
+        fn mint_nonowner_fails() {
+            let accounts = get_default_test_accounts();
+            set_caller(accounts.alice);
+
+            let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            
+            set_caller(accounts.bob);
+            assert!(token.mint(accounts.frank).is_err(), "Bob expected to have no call access");
+        }    
+
+        #[ink::test]
         fn burn_works() {
             let accounts = get_default_test_accounts();
             let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
@@ -91,6 +110,10 @@ pub mod token {
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
             default_accounts::<ink_env::DefaultEnvironment>()
+        }
+
+        fn set_caller(caller: AccountId) {
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
         }
     }
 }

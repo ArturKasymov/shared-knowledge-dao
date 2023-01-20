@@ -14,14 +14,19 @@ pub mod governor {
     };
     
     use ink_env::{
-        call::FromAccountId,
+        call::{
+            ExecutionInput,
+            FromAccountId,
+            state::Salt,
+            utils::{Set, Unset},
+        },
         Error as InkEnvError,
     };
     use ink_lang::{
         codegen::EmitEvent, reflect::ContractEventBase,
         utils::initialize_contract, ToAccountId,
     };
-    use ink_prelude::{format, string::String};
+    use ink_prelude::{format, string::String, vec::Vec};
     use ink_storage::{
         traits::{PackedLayout, SpreadLayout, SpreadAllocate},
         Mapping,
@@ -36,6 +41,7 @@ pub mod governor {
         ProposalAlreadyExecuted,
         AlreadyVoted,
         QuorumNotReached,
+        TokenOwnershipRequired,
         TokenError(PSP34Error), // this can't happen in practice
         DatabaseError(DatabaseError),
         InkEnvError(String),
@@ -155,17 +161,24 @@ pub mod governor {
 
     impl GovernorContract {
         #[ink(constructor)]
-        pub fn new(version: u8, quorum: Percentage, token_contract: AccountId, database_hash: Hash) -> Self {
-            let database_ref = DatabaseContractRef::new()
-                .code_hash(database_hash)
-                .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
-                .endowment(0)
-                .instantiate()
+        pub fn new(
+            version: u8,
+            token_owners: Vec<AccountId>,
+            quorum: Percentage,
+            token_hash: Hash,
+            database_hash: Hash
+        ) -> Self {
+            let token_contract = Self
+                ::instantiate_contract(TokenContractRef::new(token_owners), token_hash, version)
+                .unwrap_or_else(|error| {
+                    panic!("failed to instantiate the TokenContract: {:?}", error)
+                });
+            let database_contract = Self
+                ::instantiate_contract(DatabaseContractRef::new(), database_hash, version)
                 .unwrap_or_else(|error| {
                     panic!("failed to instantiate the DatabaseContract: {:?}", error)
                 });
-            let database_contract = <DatabaseContractRef as ToAccountId<super::governor::Environment>>
-                ::to_account_id(&database_ref);
+            
 
             initialize_contract(|instance: &mut Self| {
                 instance.quorum = num::clamp(quorum, 0, 100);
@@ -173,7 +186,7 @@ pub mod governor {
                 instance.database_contract = Some(database_contract);
             })
         }
-
+ 
         // For use in tests:
         // doesn't call TokenContract and DatabaseContract
         #[ink(constructor)]
@@ -188,6 +201,7 @@ pub mod governor {
         // Propose a new item to the database
         #[ink(message)]
         pub fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             let proposal = Proposal::item_add(item, description);
 
             let id = self.next_proposal_id();
@@ -200,6 +214,7 @@ pub mod governor {
         // Propose modification to existing item in the database
         #[ink(message)]
         pub fn propose_modify(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             if !self.is_item_in_database(item_id) {
                 return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
             }
@@ -215,6 +230,7 @@ pub mod governor {
 
         #[ink(message)]
         pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             let proposal = Proposal::token_mint(recipient, description);
 
             let id = self.next_proposal_id();
@@ -294,6 +310,11 @@ pub mod governor {
         pub fn get_database(&self) -> Option<AccountId> {
             self.database_contract
         }
+        
+        #[ink(message)]
+        pub fn get_token(&self) -> Option<AccountId> {
+            self.token_contract
+        }
 
         #[ink(message)]
         pub fn get_proposals_count(&self) -> u32 {
@@ -315,16 +336,18 @@ pub mod governor {
             match &proposal.category {
                 ProposalCategory::Token { recipient } => {
                     if let Some(token_contract) = self.token_contract {
-                        let mut token = Self::token_from_account_id(token_contract);
+                        let mut token = Self
+                            ::contract_from_account_id::<TokenContractRef>(token_contract);
                         token.mint(*recipient)?;
                     }
                 },
                 ProposalCategory::Database { kind, item } => {
                     if let Some(database_contract) = self.database_contract {
-                        let mut database = Self::database_from_account_id(database_contract);
+                        let mut database = Self
+                            ::contract_from_account_id::<DatabaseContractRef>(database_contract);
                         match kind {
                             ProposalDatabaseKind::Add =>
-                                return Ok(Some(database.add_item(item.clone()))),
+                                return Ok(Some(database.add_item(item.clone())?)),
                             ProposalDatabaseKind::Modify(item_id) => {
                                 database.modify_item(*item_id, item.clone())?;
                             }
@@ -337,7 +360,8 @@ pub mod governor {
 
         fn is_item_in_database(&self, id: ItemId) -> bool {
             if let Some(database_contract) = self.database_contract {
-                let database = Self::database_from_account_id(database_contract);
+                let database = Self
+                    ::contract_from_account_id::<DatabaseContractRef>(database_contract);
                 database.has_item(id)
             } else {
                 true
@@ -361,14 +385,44 @@ pub mod governor {
             id
         }
 
-        fn database_from_account_id(id: AccountId) -> DatabaseContractRef {
-            <DatabaseContractRef as FromAccountId<super::governor::Environment>>
+        fn require_token(&self, caller: AccountId) -> Result<(), GovernorError> {
+            if let Some(token_contract) = self.token_contract {
+                let balance = PSP34Ref::balance_of(&token_contract, caller);
+                if balance == 0 {
+                    return Err(GovernorError::TokenOwnershipRequired);
+                }
+            }
+            Ok(())
+        }
+
+        fn contract_from_account_id<TContract>(id: AccountId) -> TContract
+            where TContract: FromAccountId<Environment> {
+            <TContract as FromAccountId<super::governor::Environment>>
                 ::from_account_id(id)
         }
         
-        fn token_from_account_id(id: AccountId) -> TokenContractRef {
-            <TokenContractRef as FromAccountId<super::governor::Environment>>
-                ::from_account_id(id)
+        fn instantiate_contract<TContract, TArgList>(
+            contract_builder: ink_env::call::CreateBuilder<
+                Environment,
+                Unset<Hash>,
+                Unset<u64>,
+                Unset<Balance>,
+                Set<ExecutionInput<TArgList>>,
+                Unset<Salt>,
+                TContract>,
+            code_hash: Hash,
+            version: u8,
+        ) -> Result<AccountId, InkEnvError>
+            where
+                TArgList: scale::Encode,
+                TContract: ToAccountId<Environment> + FromAccountId<Environment> {
+            let contract_ref = contract_builder
+                .code_hash(code_hash)
+                .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
+                .endowment(0)
+                .instantiate()?;
+            Ok(<TContract as ToAccountId<super::governor::Environment>>
+                ::to_account_id(&contract_ref))
         }
 
         fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
