@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x4e02855159a2350bb05d6268ed222065594256616a309740d8c1f7aa10f3907f",
+    "hash": "0xf944ccd0371024a609093397d5e592979fa12e438aef50d429702d2f270ffa7e",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -1000,13 +1000,17 @@
                   "name": "QuorumNotReached"
                 },
                 {
+                  "index": 4,
+                  "name": "TokenOwnershipRequired"
+                },
+                {
                   "fields": [
                     {
                       "type": 20,
                       "typeName": "PSP34Error"
                     }
                   ],
-                  "index": 4,
+                  "index": 5,
                   "name": "TokenError"
                 },
                 {
@@ -1016,7 +1020,7 @@
                       "typeName": "DatabaseError"
                     }
                   ],
-                  "index": 5,
+                  "index": 6,
                   "name": "DatabaseError"
                 },
                 {
@@ -1026,7 +1030,7 @@
                       "typeName": "String"
                     }
                   ],
-                  "index": 6,
+                  "index": 7,
                   "name": "InkEnvError"
                 }
               ]

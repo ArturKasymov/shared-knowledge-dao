@@ -41,6 +41,7 @@ pub mod governor {
         ProposalAlreadyExecuted,
         AlreadyVoted,
         QuorumNotReached,
+        TokenOwnershipRequired,
         TokenError(PSP34Error), // this can't happen in practice
         DatabaseError(DatabaseError),
         InkEnvError(String),
@@ -200,6 +201,7 @@ pub mod governor {
         // Propose a new item to the database
         #[ink(message)]
         pub fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             let proposal = Proposal::item_add(item, description);
 
             let id = self.next_proposal_id();
@@ -212,6 +214,7 @@ pub mod governor {
         // Propose modification to existing item in the database
         #[ink(message)]
         pub fn propose_modify(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             if !self.is_item_in_database(item_id) {
                 return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
             }
@@ -227,6 +230,7 @@ pub mod governor {
 
         #[ink(message)]
         pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
             let proposal = Proposal::token_mint(recipient, description);
 
             let id = self.next_proposal_id();
@@ -332,13 +336,15 @@ pub mod governor {
             match &proposal.category {
                 ProposalCategory::Token { recipient } => {
                     if let Some(token_contract) = self.token_contract {
-                        let mut token = Self::token_from_account_id(token_contract);
+                        let mut token = Self
+                            ::contract_from_account_id::<TokenContractRef>(token_contract);
                         token.mint(*recipient)?;
                     }
                 },
                 ProposalCategory::Database { kind, item } => {
                     if let Some(database_contract) = self.database_contract {
-                        let mut database = Self::database_from_account_id(database_contract);
+                        let mut database = Self
+                            ::contract_from_account_id::<DatabaseContractRef>(database_contract);
                         match kind {
                             ProposalDatabaseKind::Add =>
                                 return Ok(Some(database.add_item(item.clone())?)),
@@ -354,7 +360,8 @@ pub mod governor {
 
         fn is_item_in_database(&self, id: ItemId) -> bool {
             if let Some(database_contract) = self.database_contract {
-                let database = Self::database_from_account_id(database_contract);
+                let database = Self
+                    ::contract_from_account_id::<DatabaseContractRef>(database_contract);
                 database.has_item(id)
             } else {
                 true
@@ -378,16 +385,22 @@ pub mod governor {
             id
         }
 
-        fn database_from_account_id(id: AccountId) -> DatabaseContractRef {
-            <DatabaseContractRef as FromAccountId<super::governor::Environment>>
+        fn require_token(&self, caller: AccountId) -> Result<(), GovernorError> {
+            if let Some(token_contract) = self.token_contract {
+                let balance = PSP34Ref::balance_of(&token_contract, caller);
+                if balance == 0 {
+                    return Err(GovernorError::TokenOwnershipRequired);
+                }
+            }
+            Ok(())
+        }
+
+        fn contract_from_account_id<TContract>(id: AccountId) -> TContract
+            where TContract: FromAccountId<Environment> {
+            <TContract as FromAccountId<super::governor::Environment>>
                 ::from_account_id(id)
         }
         
-        fn token_from_account_id(id: AccountId) -> TokenContractRef {
-            <TokenContractRef as FromAccountId<super::governor::Environment>>
-                ::from_account_id(id)
-        }
-
         fn instantiate_contract<TContract, TArgList>(
             contract_builder: ink_env::call::CreateBuilder<
                 Environment,
