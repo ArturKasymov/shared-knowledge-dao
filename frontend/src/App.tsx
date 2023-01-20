@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import '@polkadot/api-augment';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { IntercomProvider } from 'react-use-intercom';
 import { Provider as ReduxProvider } from 'react-redux';
