@@ -33,30 +33,41 @@ const getRawProposal = async (
     }
 
     const proposal = response.unwrap();
+    const executed = proposal.get('executed').valueOf();
     const category = proposal.get('category');
 
+    if (category.isDatabase) {
+      const dbCategory = category.asDatabase;
+      const item = dbCategory.get('item').toString();
+
+      if (dbCategory.kind.isAdd) {
+        return { kind: 'itemAdd', id, item, executed };
+      }
+      if (dbCategory.kind.isModify) {
+        const itemId = dbCategory.kind.asModify.toNumber();
+        return {
+          kind: 'itemModify',
+          id,
+          itemId,
+          item,
+          executed,
+        };
+      }
+    }
+
     if (category.isToken) {
-      console.log("Token proposals aren't supported yet");
-      return null;
-    }
+      const tkCategory = category.asToken;
+      const recipient = tkCategory.get('recipient').toString();
 
-    const dbCategory = category.asDatabase;
-    const item = dbCategory.get('item').toString();
-    const executed = proposal.get('executed').valueOf();
-
-    if (dbCategory.kind.isAdd) {
-      return { kind: 'itemAdd', id, item, executed };
-    }
-    if (dbCategory.kind.isModify) {
-      const itemId = dbCategory.kind.asModify.toNumber();
       return {
-        kind: 'itemModify',
+        kind: 'tokenMint',
         id,
-        itemId,
-        item,
+        recipient,
         executed,
       };
     }
+
+    return null;
   }
 
   if (result.isErr) {

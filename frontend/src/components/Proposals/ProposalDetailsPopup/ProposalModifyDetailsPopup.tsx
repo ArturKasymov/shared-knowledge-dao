@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import ProposalDetailsPopupTemplate from './ProposalDetailsPopupTemplate';
+import { TextArea } from 'components/Widgets';
+import ProposalDetailsPopupTemplate from 'components/ProposalDetailsPopupTemplate';
 
 const Wrapper = styled.div`
   width: 100%;
@@ -10,27 +11,13 @@ const Wrapper = styled.div`
 
   p {
     width: 100%;
+    margin: 0;
+    padding: 4px 0;
     text-align: center;
     font-weight: 600;
     font-size: 18px;
     background-color: ${({ theme }) => theme.colors.gray.medium};
     color: black;
-  }
-
-  textarea {
-    width: 100%;
-    height: 150px;
-    box-sizing: border-box;
-    border: transparent;
-    font-weight: 500;
-    font-size: 16px;
-    padding: 12px 20px;
-    resize: none;
-
-    &:disabled {
-      background-color: ${({ theme }) => theme.colors.background};
-      color: white;
-    }
   }
 
   div.with-arrow {
@@ -89,9 +76,9 @@ const ProposalModifyDetailsPopup = ({
   >
     <Wrapper>
       <p>MODIFY {itemId}</p>
-      <textarea value={currentItem} disabled />
+      <TextArea value={currentItem} disabled />
       <div className="with-arrow">
-        <textarea value={proposedItem} disabled />
+        <TextArea value={proposedItem} disabled />
       </div>
     </Wrapper>
   </ProposalDetailsPopupTemplate>

@@ -117,9 +117,9 @@ export interface NavbarProps {
 
 const NavLinks = (): JSX.Element => (
   <>
+    <Link to="/tokens">Token owners</Link>
     <Link to="/database">Database</Link>
     <Link to="/proposals">Vote</Link>
-    <Link to="/another">Another link `NavLinks` component</Link>
   </>
 );
 
@@ -148,9 +148,9 @@ const Navbar = ({
       <RightWrapper>
         <TokensBalance loggedAccountAddress={loggedAccountAddress} api={api} />
         <WalletButton
-        setIsAccountsModalVisible={setIsAccountsModalVisible}
-        setIsMobileNavClosed={onSetMobileNavClosed}
-        loggedAccountAddress={loggedAccountAddress}
+          setIsAccountsModalVisible={setIsAccountsModalVisible}
+          setIsMobileNavClosed={onSetMobileNavClosed}
+          loggedAccountAddress={loggedAccountAddress}
         />
       </RightWrapper>
       <HamburgerMenuIcon onButtonClick={onMobileBtnClick} isOpen={isMobileNavOpen} />

@@ -5,14 +5,17 @@ const Wrapper = styled.div`
   height: 100%;
   width: 100%;
 
-  transition: opacity 500ms ease;
+  transition: all 500ms ease;
 
   &.hide {
     opacity: 0;
+    max-height: 0;
   }
 
   &.show {
     opacity: 1;
+    flex-grow: 1;
+    max-height: 100%;
   }
 `;
 

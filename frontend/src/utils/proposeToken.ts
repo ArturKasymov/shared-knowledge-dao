@@ -11,10 +11,11 @@ import { handleProposalAddedEvent } from 'utils/handleEvent';
 import governorMetadata from '../metadata/governor_metadata.json';
 import addresses from '../metadata/addresses.json';
 
-export const proposeAddItem = async (
-  text: string,
+export const proposeMint = async (
+  recipientAddress: string,
   loggedUser: InjectedAccountWithMeta,
-  api: ApiPromise
+  api: ApiPromise,
+  onSuccess: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
@@ -23,44 +24,18 @@ export const proposeAddItem = async (
   }
 
   await contract.tx
-    .proposeAdd(
+    .proposeMint(
       {
         gasLimit: GAS_LIMIT_VALUE,
       },
-      text,
+      recipientAddress,
       '' // description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      handleProposalAddedEvent(events, status, api);
-    })
-    .catch((error) => {
-      displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
-    });
-};
-
-export const proposeModifyItem = async (
-  id: number,
-  text: string,
-  loggedUser: InjectedAccountWithMeta,
-  api: ApiPromise
-): Promise<void> => {
-  const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
-  const injector = await getInjector(loggedUser);
-  if (!injector) {
-    return;
-  }
-
-  await contract.tx
-    .proposeModify(
-      {
-        gasLimit: GAS_LIMIT_VALUE,
-      },
-      id,
-      text,
-      '' // description
-    )
-    .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      handleProposalAddedEvent(events, status, api);
+      const proposalId = handleProposalAddedEvent(events, status, api);
+      if (proposalId !== null) {
+        onSuccess(proposalId);
+      }
     })
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);

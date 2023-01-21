@@ -6,26 +6,26 @@ import ProposalTemplate from '../Common';
 const ProposalContent = styled.h3`
   align-self: center;
   font-weight: 500;
-  padding: 20px;
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
-  min-height: 60px;
-  padding: 10px;
-  background-color: ${({ theme }) => theme.colors.night[300]};
+  height: 100%;
+  background-color: ${({ theme }) => theme.colors.primaryLighter};
+  color: ${({ theme }) => theme.colors.night[100]};
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 `;
 
 interface PlaceholderProposalProps {
+  action: string;
   onClick: () => void;
 }
 
-const PlaceholderProposal = ({ onClick }: PlaceholderProposalProps): JSX.Element => (
-  <ProposalTemplate action="A" isExecuted={false}>
+const PlaceholderProposal = ({ action, onClick }: PlaceholderProposalProps): JSX.Element => (
+  <ProposalTemplate action={action} isExecuted={false}>
     <ProposalContent role="presentation" onClick={onClick}>
       +PROPOSE
     </ProposalContent>

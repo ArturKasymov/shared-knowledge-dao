@@ -1,4 +1,4 @@
-type ProposalKind = 'itemAdd' | 'itemModify';
+type ProposalKind = 'itemAdd' | 'itemModify' | 'tokenMint' | 'tokenBurn';
 
 interface ProposalBase {
   kind: ProposalKind;
@@ -20,7 +20,36 @@ export type ProposalItemModify = ProposalBase & {
   item: string;
 };
 
-export type Proposal = ProposalItemAdd | ProposalItemModify;
+export type ProposalTokenMint = ProposalBase & {
+  kind: 'tokenMint';
+  recipient: string;
+};
+
+export type ProposalTokenBurn = ProposalBase & {
+  kind: 'tokenBurn';
+  recipient: string;
+};
+
+export type ProposalDatabase = ProposalItemAdd | ProposalItemModify;
+export type ProposalToken = ProposalTokenMint | ProposalTokenBurn;
+
+export type Proposal = ProposalDatabase | ProposalToken;
+
+export const newMintProposal = (id: number, recipient: string): ProposalTokenMint => ({
+  kind: 'tokenMint',
+  id,
+  recipient,
+  votes: 0,
+  hasSelfVoted: false,
+  executed: false,
+  quorum: 100, // FIXME
+});
 
 export const isQuorumReached = (proposal: ProposalBase): boolean =>
   proposal.votes >= proposal.quorum;
+
+export const isDatabaseProposal = (proposal: Proposal): proposal is ProposalDatabase =>
+  (proposal as ProposalDatabase).kind.substring(0, 4) === 'item';
+
+export const isTokenProposal = (proposal: Proposal): proposal is ProposalToken =>
+  (proposal as ProposalToken).kind.substring(0, 5) === 'token';

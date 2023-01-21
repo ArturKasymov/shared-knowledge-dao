@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { DatabaseItemPopupTemplate } from '../Common';
+import PopupTemplate from 'components/PopupTemplate';
+import { Button, Label, TextArea } from 'components/Widgets';
 
 interface DatabaseProposeNewItemPopupProps {
   onPopupClose: () => void;
-  onItemPropose: (text: string) => void;
+  onItemPropose: (item: string) => void;
 }
 
 const DatabaseProposeNewItemPopup = ({
@@ -22,21 +23,26 @@ const DatabaseProposeNewItemPopup = ({
 
   // TODO: maybe disable propose button when wallet not connected?
   return (
-    <DatabaseItemPopupTemplate
-      textArea={<textarea ref={textAreaRef} />}
-      leftBottomText={<span>NEW</span>}
+    <PopupTemplate
+      leftBottom={
+        <Label>
+          <span>NEW</span>
+        </Label>
+      }
       buttons={
         <>
-          <button type="button" className="cancel" onClick={onPopupClose}>
+          <Button type="button" className="cancel-btn" onClick={onPopupClose}>
             Cancel
-          </button>
-          <button type="button" onClick={handlePropose}>
+          </Button>
+          <Button type="button" className="primary-btn" onClick={handlePropose}>
             Propose
-          </button>
+          </Button>
         </>
       }
       onPopupClose={onPopupClose}
-    />
+    >
+      <TextArea ref={textAreaRef} />
+    </PopupTemplate>
   );
 };
 
