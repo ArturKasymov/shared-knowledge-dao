@@ -44,7 +44,7 @@ const TokenProposeMintPopup = ({
       onPopupClose={onPopupClose}
     >
       <AddressInputWrapper>
-        <AddressInput valid={isAddressValid()} onAddressChange={setAddress} />
+        <AddressInput valid={isAddressValid()} onInputChange={setAddress} />
       </AddressInputWrapper>
     </PopupTemplate>
   );

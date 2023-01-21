@@ -15,14 +15,13 @@ export const proposeAddItem = async (
   text: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise
-): Promise<number | null> => {
+): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
   if (!injector) {
-    return null;
+    return;
   }
 
-  let proposalId = null;
   await contract.tx
     .proposeAdd(
       {
@@ -32,12 +31,11 @@ export const proposeAddItem = async (
       '' // description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      proposalId = handleProposalAddedEvent(events, status, api);
+      handleProposalAddedEvent(events, status, api);
     })
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
     });
-  return proposalId;
 };
 
 export const proposeModifyItem = async (
@@ -45,14 +43,13 @@ export const proposeModifyItem = async (
   text: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise
-): Promise<number | null> => {
+): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
   if (!injector) {
-    return null;
+    return;
   }
 
-  let proposalId = null;
   await contract.tx
     .proposeModify(
       {
@@ -63,10 +60,9 @@ export const proposeModifyItem = async (
       '' // description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      proposalId = handleProposalAddedEvent(events, status, api);
+      handleProposalAddedEvent(events, status, api);
     })
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
     });
-  return proposalId;
 };

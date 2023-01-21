@@ -1,17 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-interface AddressInputProps {
-  valid: boolean;
-  onAddressChange: (address: string) => void;
-}
-
-const AddressInput = styled.input.attrs(({ valid, onAddressChange }: AddressInputProps) => ({
-  type: 'text',
-  placeholder: 'Account address...',
-  className: valid ? '' : 'invalid',
-  onInput: (e: Event) => onAddressChange((e.target as HTMLInputElement).value),
-}))`
+const AddressInputWrapper = styled.input`
   width: 100%;
   align-self: center;
   box-sizing: border-box;
@@ -30,5 +20,20 @@ const AddressInput = styled.input.attrs(({ valid, onAddressChange }: AddressInpu
     outline-color: ${({ theme }) => theme.colors.error};
   }
 `;
+
+interface AddressInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  valid?: boolean;
+  onInputChange?: (address: string) => void;
+}
+
+const AddressInput = ({ valid, onInputChange, ...props }: AddressInputProps): JSX.Element => (
+  <AddressInputWrapper
+    type='text'
+    placeholder='Account address...'
+    className={(valid === undefined || valid) ? '' : 'invalid'}
+    onInput={(e) => onInputChange && onInputChange((e.target as HTMLInputElement).value)}
+    {...props}
+   />
+);
 
 export default AddressInput;

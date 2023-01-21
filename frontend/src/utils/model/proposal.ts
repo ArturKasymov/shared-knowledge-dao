@@ -48,5 +48,8 @@ export const newMintProposal = (id: number, recipient: string): ProposalTokenMin
 export const isQuorumReached = (proposal: ProposalBase): boolean =>
   proposal.votes >= proposal.quorum;
 
+export const isDatabaseProposal = (proposal: Proposal): proposal is ProposalDatabase =>
+  (proposal as ProposalDatabase).kind.substring(0, 4) === 'item';
+
 export const isTokenProposal = (proposal: Proposal): proposal is ProposalToken =>
   (proposal as ProposalToken).kind.substring(0, 5) === 'token';

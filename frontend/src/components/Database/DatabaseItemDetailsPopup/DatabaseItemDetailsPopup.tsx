@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import PopupTemplate from 'components/PopupTemplate';
-import { Button, TextArea } from 'components/Widgets';
+import { Button, Label, TextArea } from 'components/Widgets';
 
 import { DatabaseItem } from 'utils/getDatabaseItem';
 
@@ -43,9 +43,9 @@ const DatabaseItemDetailsPopup = ({
   return (
     <PopupTemplate
       leftBottom={
-        <p style={{ height: '100%', fontWeight: '60' }}>
+        <Label>
           <span>ID:</span> {item.id}
-        </p>
+        </Label>
       }
       buttons={
         isBeingModified ? (
@@ -53,14 +53,14 @@ const DatabaseItemDetailsPopup = ({
             <Button type="button" className="cancel-btn" onClick={handleCancel}>
               Cancel
             </Button>
-            <button type="button" className="primary-btn" onClick={handlePropose}>
+            <Button type="button" className="primary-btn" onClick={handlePropose}>
               Propose
-            </button>
+            </Button>
           </>
         ) : (
-          <button type="button" className="primary-btn" onClick={handleModify}>
+          <Button type="button" className="primary-btn" onClick={handleModify}>
             Modify
-          </button>
+          </Button>
         )
       }
       onPopupClose={onPopupClose}
