@@ -75,10 +75,19 @@ pub mod governor {
         Modify(ItemId),
     }
 
+    #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum ProposalTokenKind {
+        #[default]
+        Mint,
+        Burn,
+    }
+
     #[derive(Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProposalCategory {
         Token {
+            kind: ProposalTokenKind,
             recipient: AccountId,
         },
         Database {
@@ -90,6 +99,7 @@ pub mod governor {
     impl Default for ProposalCategory {
         fn default() -> Self {
             Self::Token {
+                kind: ProposalTokenKind::default(),
                 recipient: AccountId::default(),
             }
         }
@@ -107,7 +117,21 @@ pub mod governor {
     impl Proposal {
         fn token_mint(recipient: AccountId, description: String) -> Self {
             Proposal {
-                category: ProposalCategory::Token { recipient },
+                category: ProposalCategory::Token {
+                    kind: ProposalTokenKind::Mint,
+                    recipient
+                },
+                executed: false,
+                description,
+            }
+        }
+        
+        fn token_burn(recipient: AccountId, description: String) -> Self {
+            Proposal {
+                category: ProposalCategory::Token {
+                    kind: ProposalTokenKind::Burn,
+                    recipient
+                },
                 executed: false,
                 description,
             }
@@ -239,6 +263,18 @@ pub mod governor {
 
             Ok(id)
         }
+        
+        #[ink(message)]
+        pub fn propose_burn(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
+            self.require_token(Self::env().caller())?;
+            let proposal = Proposal::token_burn(recipient, description);
+
+            let id = self.next_proposal_id();
+            self.proposals.insert(id, &proposal);
+            Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
+
+            Ok(id)
+        }
 
         // Vote "for" this proposal
         // Not voting is equivalent to "against", for now
@@ -334,11 +370,15 @@ pub mod governor {
 
         fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
             match &proposal.category {
-                ProposalCategory::Token { recipient } => {
+                ProposalCategory::Token { kind, recipient } => {
                     if let Some(token_contract) = self.token_contract {
                         let mut token = Self
                             ::contract_from_account_id::<TokenContractRef>(token_contract);
-                        token.mint(*recipient)?;
+                        match kind {
+                            ProposalTokenKind::Mint =>
+                                Ok(token.mint(*recipient)?),
+                            ProposalTokenKind::Burn =>
+                                Ok(token.burn(*recipient)?),
                     }
                 },
                 ProposalCategory::Database { kind, item } => {
