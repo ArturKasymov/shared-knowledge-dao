@@ -166,7 +166,7 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
           onItemPropose={handleProposeModify}
         />
       )}
-      <Layout>
+      <Layout api={api}>
         <Wrapper className="wrapper">
           <HeroHeading variant="database" />
           <DatabaseContainer>

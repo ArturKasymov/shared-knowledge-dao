@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { ApiPromise } from '@polkadot/api';
+
 import Navbar from 'components/Navbar';
 import Footer from 'components/Footer';
 import NotificationToast from 'components/NotificationToast';
@@ -49,10 +51,11 @@ const Wrapper = styled.div`
 `;
 
 interface LayoutProps {
+  api: ApiPromise | null;
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ api, children }: LayoutProps) => {
   const [isAccountsModalVisible, setIsAccountsModalVisible] = useState(false);
 
   const dispatch = useDispatch();
@@ -86,6 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
         loggedAccountAddress={
           checkIfAddressIsValid(loggedAccount?.address) ? loggedAccount?.address : undefined
         }
+        api={api}
       />
       {children}
       <NotificationToast />

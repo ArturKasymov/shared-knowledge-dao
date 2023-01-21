@@ -223,7 +223,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
-      <Layout>
+      <Layout api={api}>
         <Wrapper className="wrapper">
           <HeroHeading variant="proposals" />
           <div className="toggle-switch-wrapper">
