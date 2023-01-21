@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { DatabaseItem } from 'utils/getDatabaseItem';
+import PopupTemplate from 'components/PopupTemplate';
+import { Button, TextArea } from 'components/Widgets';
 
-import { DatabaseItemPopupTemplate } from '../Common';
+import { DatabaseItem } from 'utils/getDatabaseItem';
 
 interface DatabaseItemDetailsPopupProps {
   item: DatabaseItem;
@@ -40,37 +41,36 @@ const DatabaseItemDetailsPopup = ({
 
   // TODO: maybe disable propose button when wallet not connected?
   return (
-    <DatabaseItemPopupTemplate
-      textArea={
-        <textarea
-          ref={textAreaRef}
-          defaultValue={item.text}
-          disabled={!isBeingModified || undefined}
-        />
-      }
-      leftBottomText={
-        <>
+    <PopupTemplate
+      leftBottom={
+        <p style={{ height: '100%', fontWeight: '60' }}>
           <span>ID:</span> {item.id}
-        </>
+        </p>
       }
       buttons={
         isBeingModified ? (
           <>
-            <button type="button" className="cancel" onClick={handleCancel}>
+            <Button type="button" className="cancel-btn" onClick={handleCancel}>
               Cancel
-            </button>
-            <button type="button" onClick={handlePropose}>
+            </Button>
+            <button type="button" className="primary-btn" onClick={handlePropose}>
               Propose
             </button>
           </>
         ) : (
-          <button type="button" onClick={handleModify}>
+          <button type="button" className="primary-btn" onClick={handleModify}>
             Modify
           </button>
         )
       }
       onPopupClose={onPopupClose}
-    />
+    >
+      <TextArea
+        ref={textAreaRef}
+        defaultValue={item.text}
+        disabled={!isBeingModified || undefined}
+      />
+    </PopupTemplate>
   );
 };
 

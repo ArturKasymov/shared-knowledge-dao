@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
-
 import { ApiPromise } from '@polkadot/api';
 
 import { getTokensBalance } from 'utils/getTokensBalance';
 import { queries } from 'shared/layout';
 import { ReactComponent as TokenIcon } from 'assets/TokenIcon.svg';
 
-const TokensBalanceStyling = styled.div<{ empty: boolean; }>`
+const TokensBalanceStyling = styled.div<{ empty: boolean }>`
   height: 36px;
   width: max-content;
   color: ${({ theme }) => theme.colors.primaryDarker};
@@ -25,9 +24,11 @@ const TokensBalanceStyling = styled.div<{ empty: boolean; }>`
   will-change: background-color, opacity;
   justify-self: center;
 
-  ${({ empty }) => empty && css`
-    background: ${({ theme }) => theme.colors.error};
-  `};
+  ${({ empty }) =>
+    empty &&
+    css`
+      background: ${({ theme }) => theme.colors.error};
+    `};
 
   & span {
     font-weight: 500;
@@ -75,7 +76,7 @@ const TokensBalance = ({ loggedAccountAddress, api }: TokensBalanceProps): JSX.E
   const [tokensBalance, setTokensBalance] = useState<number | null>(null);
 
   const getBalance = useCallback(
-    async () => api && loggedAccountAddress ? getTokensBalance(loggedAccountAddress, api) : null,
+    async () => (api && loggedAccountAddress ? getTokensBalance(loggedAccountAddress, api) : null),
     [loggedAccountAddress, api]
   );
 

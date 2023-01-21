@@ -34,10 +34,16 @@ const HeroHeadingWrapper = styled.div`
   }
 `;
 
-type Variant = 'database' | 'proposals' | 'another';
+type Variant = 'tokens' | 'database' | 'proposals' | 'another';
 
 const HeroHeading = ({ variant }: { variant: Variant }) => (
   <>
+    {variant === 'tokens' && (
+      <HeroHeadingWrapper>
+        <h2>Token proposals</h2>
+        <p>Share the right to vote with someone else.</p>
+      </HeroHeadingWrapper>
+    )}
     {variant === 'database' && (
       <HeroHeadingWrapper>
         <h2>Database</h2>

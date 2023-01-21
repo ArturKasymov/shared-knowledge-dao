@@ -2,10 +2,10 @@ import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import ProposalDetailsPopupTemplate from 'components/ProposalDetailsPopupTemplate';
-import { TextArea } from 'components/Widgets';
+import { AddressInput } from 'components/Widgets';
 
 const Wrapper = styled.div`
-  width: 100%;
+  width: 480px;
   align-self: center;
   box-sizing: border-box;
 
@@ -17,13 +17,13 @@ const Wrapper = styled.div`
     font-weight: 600;
     font-size: 18px;
     background-color: ${({ theme }) => theme.colors.gray.medium};
-    color: black;
+    color: black;i
   }
 `;
 
-interface ProposalAddDetailsPopupProps {
+interface ProposalMintDetailsPopupProps {
   id: number;
-  item: string;
+  recipientAddress: string;
   votes: number;
   canVote: boolean;
   canExecute: boolean;
@@ -32,16 +32,16 @@ interface ProposalAddDetailsPopupProps {
   onExecute: (id: number) => void;
 }
 
-const ProposalAddDetailsPopup = ({
+const ProposalMintDetailsPopup = ({
   id,
-  item,
+  recipientAddress,
   votes,
   canVote,
   canExecute,
   onPopupClose,
   onVote,
   onExecute,
-}: ProposalAddDetailsPopupProps): JSX.Element => (
+}: ProposalMintDetailsPopupProps): JSX.Element => (
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
@@ -52,9 +52,10 @@ const ProposalAddDetailsPopup = ({
     onExecute={onExecute}
   >
     <Wrapper>
-      <p>ADD</p>
-      <TextArea value={item} disabled />
+      <p>MINT TOKEN</p>
+      <AddressInput defaultValue={recipientAddress} valid disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>
 );
-export default ProposalAddDetailsPopup;
+
+export default ProposalMintDetailsPopup;

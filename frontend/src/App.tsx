@@ -6,6 +6,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 
 import './App.css';
 import { displayErrorToast } from 'components/NotificationToast';
+import TokenOwners from 'components/TokenOwners';
 import Database from 'components/Database';
 import Proposals from 'components/Proposals';
 
@@ -50,6 +51,7 @@ const App = (): JSX.Element => {
       <IntercomProvider appId={INTERCOM_APP_ID} autoBoot>
         <Router basename="/dao">
           <Routes>
+            <Route path="/tokens" element={<TokenOwners api={api} />} />
             <Route path="/database" element={<Database api={api} />} />
             <Route path="/proposals" element={<Proposals api={api} />} />
             <Route path="*" element={<Navigate to="/database" replace />} />

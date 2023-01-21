@@ -6,17 +6,19 @@ import type { EventRecord } from '@polkadot/types/interfaces';
 
 import HeroHeading from 'components/HeroHeading';
 import Layout from 'components/Layout';
-import { ProposalAdd, ProposalModify } from 'components/Proposal';
+import { ProposalToken } from 'components/Proposal';
 import { displayErrorToast } from 'components/NotificationToast';
 import ToggleSwitch from 'components/ToggleSwitch';
 import SmoothOptional from 'components/SmoothOptional';
 import PlaceholderProposal from 'components/Proposal/Placeholder';
 
+import { proposeMint as proposeMintToken } from 'utils/proposeToken';
 import { ErrorToastMessages } from 'shared/constants';
 import { RootState } from 'redux/store';
 import {
   setAllProposals,
   setSelfVoteWeight,
+  onProposed as addProposal,
   onVoted as updateProposalSelfVoted,
   onExecuted as updateProposalExecuted,
 } from 'redux/slices/proposalsSlice';
@@ -24,13 +26,18 @@ import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
-import { isQuorumReached, Proposal as ProposalModel } from 'utils/model/proposal';
+import {
+  isQuorumReached,
+  isTokenProposal,
+  newMintProposal,
+  Proposal as ProposalModel,
+  ProposalToken as ProposalTokenModel,
+} from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
-import { proposeAddItem as proposeAddDatabaseItem } from 'utils/proposeDatabase';
 
-import { ProposalAddDetailsPopup, ProposalModifyDetailsPopup } from './ProposalDetailsPopup';
-import DatabaseProposeNewItemPopup from '../Database/DatabaseProposeNewItemPopup';
+import { ProposalMintDetailsPopup } from './ProposalDetailsPopup';
+import TokenProposeMintPopup from './TokenProposePopup';
 
 const Wrapper = styled.div`
   color: ${({ theme }) => theme.colors.white};
@@ -56,19 +63,23 @@ const ProposalsContainer = styled.div`
   }
 `;
 
-interface ProposalListProps {
+interface TokenProposalListProps {
   api: ApiPromise | null;
 }
 
-const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
+const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
   const [proposals, setProposals] = useState<ProposalModel[]>([]);
   const dispatch = useDispatch();
   const loggedAccount = useSelector((state: RootState) => state.walletAccounts.account);
-  const testProposals = useSelector((state: RootState) => state.proposals.proposals);
-  const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
+  const testProposals = useSelector((state: RootState) => state.proposals.proposals).filter(
+    isTokenProposal
+  );
   const [showExecutedProposals, setShowExecutedProposals] = useState(false);
-  const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalModel | null>(null);
-  const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
+  const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalTokenModel | null>(
+    null
+  );
+  const [proposeTokenDisplay, setProposeTokenDisplay] = useState(false);
+
   const getAllProposalsIds = useCallback(async () => api && getProposalsIds(api), [api]);
   const getProposalById = useCallback(
     async (id: number) => api && getProposal(id, loggedAccount, api),
@@ -130,14 +141,16 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  const handleProposeAdd = (text: string) => {
+  const handleProposeMint = (recipientAddress: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+      proposeMintToken(recipientAddress, loggedAccount, api, (proposalId) =>
+        dispatch(addProposal(newMintProposal(proposalId, recipientAddress)))
+      ).then(() => setProposeTokenDisplay(false));
     }
   };
 
@@ -148,84 +161,46 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     setProposalDetailsDisplay(proposalToBeDisplayed);
   };
 
-  const proposalToReactNode = (proposal: ProposalModel) => {
-    switch (proposal.kind) {
-      case 'itemAdd':
-        return (
-          <ProposalAdd
-            key={proposal.id}
-            id={proposal.id}
-            item={proposal.item}
-            isExecuted={proposal.executed}
-            displayDetails={displayProposalDetails}
-          />
-        );
-      case 'itemModify':
-        return (
-          <ProposalModify
-            key={proposal.id}
-            id={proposal.id}
-            itemId={proposal.itemId}
-            item={proposal.item}
-            isExecuted={proposal.executed}
-            displayDetails={displayProposalDetails}
-          />
-        );
-    }
-  };
+  const proposalToReactNode = (proposal: ProposalTokenModel) => (
+    <ProposalToken
+      key={proposal.id}
+      id={proposal.id}
+      action={proposal.kind === 'tokenMint' ? 'Mint' : 'Burn'}
+      recipientAddress={proposal.recipient}
+      isExecuted={proposal.executed}
+      displayDetails={displayProposalDetails}
+    />
+  );
 
-  const proposalToPopup = (proposal: ProposalModel) => {
+  const proposalToPopup = (proposal: ProposalTokenModel) => {
     const canVote = !!loggedAccount && !proposal.hasSelfVoted;
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
-    switch (proposal.kind) {
-      case 'itemAdd':
-        return (
-          <ProposalAddDetailsPopup
-            id={proposal.id}
-            item={proposal.item}
-            votes={proposal.votes}
-            canVote={canVote}
-            canExecute={canExecute}
-            onPopupClose={() => setProposalDetailsDisplay(null)}
-            onVote={handleVote}
-            onExecute={handleExecute}
-          />
-        );
-      case 'itemModify':
-        // FIXME: databaseItems may not be loaded
-        // either load lazily in this moment
-        // or as soon as Proposals page is opened (copy from Database.tsx)
-        return (
-          <ProposalModifyDetailsPopup
-            id={proposal.id}
-            itemId={proposal.itemId}
-            currentItem={
-              databaseItems.find((item) => item.id === proposal.itemId)?.text ?? 'undefined'
-            }
-            proposedItem={proposal.item}
-            votes={proposal.votes}
-            canVote={canVote}
-            canExecute={canExecute}
-            onPopupClose={() => setProposalDetailsDisplay(null)}
-            onVote={handleVote}
-            onExecute={handleExecute}
-          />
-        );
-    }
+    return (
+      <ProposalMintDetailsPopup
+        id={proposal.id}
+        recipientAddress={proposal.recipient}
+        votes={proposal.votes}
+        canVote={canVote}
+        canExecute={canExecute}
+        onPopupClose={() => setProposalDetailsDisplay(null)}
+        onVote={handleVote}
+        onExecute={handleExecute}
+      />
+    );
   };
 
   return (
     <>
-      {proposeNewItemDisplay && (
-        <DatabaseProposeNewItemPopup
-          onPopupClose={() => setProposeNewItemDisplay(false)}
-          onItemPropose={handleProposeAdd}
+      {proposeTokenDisplay && (
+        <TokenProposeMintPopup
+          onPopupClose={() => setProposeTokenDisplay(false)}
+          onPropose={handleProposeMint}
         />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
       <Layout api={api}>
         <Wrapper className="wrapper">
-          <HeroHeading variant="proposals" />
+          <HeroHeading variant="tokens" />
           <div className="toggle-switch-wrapper">
             <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
           </div>
@@ -235,7 +210,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
                 {proposalToReactNode(p)}
               </SmoothOptional>
             ))}
-            <PlaceholderProposal action="A" onClick={() => setProposeNewItemDisplay(true)} />
+            <PlaceholderProposal action="M" onClick={() => setProposeTokenDisplay(true)} />
           </ProposalsContainer>
         </Wrapper>
       </Layout>
@@ -243,4 +218,4 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   );
 };
 
-export default ProposalList;
+export default TokenProposalList;

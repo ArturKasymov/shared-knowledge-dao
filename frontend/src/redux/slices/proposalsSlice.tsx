@@ -23,6 +23,9 @@ export const proposalsSlice = createSlice({
     setSelfVoteWeight: (state, action) => {
       state.selfVoteWeight = action.payload;
     },
+    onProposed: (state, action) => {
+      state.proposals.push(action.payload);
+    },
     onVoted: (state, action) => {
       const index = current(state).proposals.findIndex(
         (proposal) => proposal.id === action.payload
@@ -43,5 +46,6 @@ export const proposalsSlice = createSlice({
   },
 });
 
-export const { setAllProposals, setSelfVoteWeight, onVoted, onExecuted } = proposalsSlice.actions;
+export const { setAllProposals, setSelfVoteWeight, onProposed, onVoted, onExecuted } =
+  proposalsSlice.actions;
 export default proposalsSlice.reducer;
