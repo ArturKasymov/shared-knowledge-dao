@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { ApiPromise } from '@polkadot/api';
 
 import HamburgerMenuIcon from 'components/HamburgerMenuIcon';
 import WalletButton from 'components/Wallet/WalletButton';
+import TokensBalance from 'components/TokensBalance';
 
 import { queries } from 'shared/layout';
 import { ReactComponent as Icon } from 'assets/AlephZeroLogo.svg';
@@ -68,6 +70,17 @@ const NavlinksWrapper = styled.div`
   }
 `;
 
+const RightWrapper = styled.div`
+  display: none;
+  gap: 24px;
+  justify-content: end;
+  align-items: center;
+
+  ${queries.tablet} {
+    display: flex;
+  }
+`;
+
 const MenuMobile = styled.nav`
   width: 100vw;
   height: calc(100vh - 64px);
@@ -99,6 +112,7 @@ const MenuMobile = styled.nav`
 export interface NavbarProps {
   setIsAccountsModalVisible: () => void;
   loggedAccountAddress?: string;
+  api: ApiPromise | null;
 }
 
 const NavLinks = (): JSX.Element => (
@@ -109,7 +123,11 @@ const NavLinks = (): JSX.Element => (
   </>
 );
 
-const Navbar = ({ setIsAccountsModalVisible, loggedAccountAddress }: NavbarProps): JSX.Element => {
+const Navbar = ({
+  setIsAccountsModalVisible,
+  loggedAccountAddress,
+  api,
+}: NavbarProps): JSX.Element => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
 
   const onMobileBtnClick = () => {
@@ -127,11 +145,14 @@ const Navbar = ({ setIsAccountsModalVisible, loggedAccountAddress }: NavbarProps
       <NavlinksWrapper>
         <NavLinks />
       </NavlinksWrapper>
-      <WalletButton
+      <RightWrapper>
+        <TokensBalance loggedAccountAddress={loggedAccountAddress} api={api} />
+        <WalletButton
         setIsAccountsModalVisible={setIsAccountsModalVisible}
         setIsMobileNavClosed={onSetMobileNavClosed}
         loggedAccountAddress={loggedAccountAddress}
-      />
+        />
+      </RightWrapper>
       <HamburgerMenuIcon onButtonClick={onMobileBtnClick} isOpen={isMobileNavOpen} />
       <MenuMobile className={isMobileNavOpen ? 'open' : 'closed'}>
         <NavLinks />
