@@ -180,6 +180,8 @@ pub mod governor {
         token_contract: Option<AccountId>,
         database_contract: Option<AccountId>,
     }
+    
+    impl CrossContractCaller for GovernorContract {}
 
     impl GovernorContract {
         #[ink(constructor)]
@@ -192,12 +194,12 @@ pub mod governor {
             database_hash: Hash,
         ) -> Self {
             let token_contract = Self
-            ::instantiate_contract(TokenContractRef::new(token_owners), token_hash, version)
+            ::instantiate_contract(TokenContractRef::new(token_owners), token_hash, version, Self::env().caller())
                 .unwrap_or_else(|error| {
                     panic!("failed to instantiate the TokenContract: {:?}", error)
                 });
             let database_contract = Self
-            ::instantiate_contract(DatabaseContractRef::new(), database_hash, version)
+            ::instantiate_contract(DatabaseContractRef::new(), database_hash, version, Self::env().caller())
                 .unwrap_or_else(|error| {
                     panic!("failed to instantiate the DatabaseContract: {:?}", error)
                 });
@@ -465,36 +467,6 @@ pub mod governor {
             Ok(())
         }
 
-        fn contract_from_account_id<TContract>(id: AccountId) -> TContract
-            where TContract: FromAccountId<Environment> {
-            <TContract as FromAccountId<super::governor::Environment>>
-            ::from_account_id(id)
-        }
-
-        fn instantiate_contract<TContract, TArgList>(
-            contract_builder: ink_env::call::CreateBuilder<
-                Environment,
-                Unset<Hash>,
-                Unset<u64>,
-                Unset<Balance>,
-                Set<ExecutionInput<TArgList>>,
-                Unset<Salt>,
-                TContract>,
-            code_hash: Hash,
-            version: u8,
-        ) -> Result<AccountId, InkEnvError>
-            where
-                TArgList: scale::Encode,
-                TContract: ToAccountId<Environment> + FromAccountId<Environment> {
-            let contract_ref = contract_builder
-                .code_hash(code_hash)
-                .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
-                .endowment(0)
-                .instantiate()?;
-            Ok(<TContract as ToAccountId<super::governor::Environment>>
-            ::to_account_id(&contract_ref))
-        }
-
         fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
             emitter.emit_event(event);
         }
@@ -517,6 +489,42 @@ pub mod governor {
     pub struct ProposalExecuted {
         #[ink(topic)]
         id: ProposalId,
+    }
+
+    trait CrossContractCaller {
+        fn contract_from_account_id<TContract>(id: AccountId) -> TContract
+            where TContract: FromAccountId<Environment>
+        {
+            <TContract as FromAccountId<super::governor::Environment>>
+                ::from_account_id(id)
+        }
+
+        fn instantiate_contract<TContract, TArgList>(
+            contract_builder: ink_env::call::CreateBuilder<
+                Environment,
+                Unset<Hash>,
+                Unset<u64>,
+                Unset<Balance>,
+                Set<ExecutionInput<TArgList>>,
+                Unset<Salt>,
+                TContract>,
+            code_hash: Hash,
+            version: u8,
+            caller: AccountId,
+        ) -> Result<AccountId, InkEnvError>
+            where
+                TArgList: scale::Encode,
+                TContract: ToAccountId<Environment> + FromAccountId<Environment>
+        {
+            let contract_ref = contract_builder
+                .code_hash(code_hash)
+                .salt_bytes([version.to_le_bytes().as_ref(), caller.as_ref()].concat())
+                .endowment(0)
+                .instantiate()?;
+
+            Ok(<TContract as ToAccountId<super::governor::Environment>>
+                ::to_account_id(&contract_ref))
+        }
     }
 
     #[cfg(test)]
