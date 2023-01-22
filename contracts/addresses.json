@@ -3,6 +3,6 @@
   "token_address": "5EXUedwMaFFhAbdkQdmqWJB7SWX6XKL8iGSXa3Bhuwen4QdC",
   "database_code_hash": "0x9d09a46ac17d808c404364317b4cfd5799d93a634c96eb509ae6b783eb18e1a1",
   "database_address": "5GSauHKtkVzwcRSLgeNMqj164dybGod37UtYcSvuu2tugFkd",
-  "governor_code_hash": "0xf944ccd0371024a609093397d5e592979fa12e438aef50d429702d2f270ffa7e",
-  "governor_address": "5Ec8S3jWXiF2qhvtqVGs6UviFvCRTozErs6m2tso9Lr2dVR4"
+  "sage_code_hash": "0xf944ccd0371024a609093397d5e592979fa12e438aef50d429702d2f270ffa7e",
+  "sage_address": "5Ec8S3jWXiF2qhvtqVGs6UviFvCRTozErs6m2tso9Lr2dVR4"
 }

@@ -1,5 +1,5 @@
 [package]
-name = "governor"
+name = "sage"
 version = "0.3.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
@@ -25,7 +25,7 @@ token = { path = "../token", default-features = false, features = ["ink-as-depen
 database = { path = "../database", default-features = false, features = ["ink-as-dependency"] }
 
 [lib]
-name = "governor"
+name = "sage"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.

@@ -3,10 +3,10 @@
 use ink_lang as ink;
 
 #[ink::contract]
-pub mod governor {
+pub mod sage {
 
     use token::token::{
-        TokenContractRef,
+        WisdomTokenRef,
     };
     use database::database::{
         DatabaseContractRef,
@@ -36,7 +36,7 @@ pub mod governor {
 
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    pub enum GovernorError {
+    pub enum SageError {
         ProposalNotFound,
         ProposalAlreadyExecuted,
         AlreadyVoted,
@@ -47,25 +47,25 @@ pub mod governor {
         InkEnvError(String),
     }
 
-    impl From<PSP34Error> for GovernorError {
+    impl From<PSP34Error> for SageError {
         fn from(e: PSP34Error) -> Self {
-            GovernorError::TokenError(e)
+            SageError::TokenError(e)
         }
     }
 
-    impl From<DatabaseError> for GovernorError {
+    impl From<DatabaseError> for SageError {
         fn from(e: DatabaseError) -> Self {
-            GovernorError::DatabaseError(e)
+            SageError::DatabaseError(e)
         }
     }
 
-    impl From<InkEnvError> for GovernorError {
+    impl From<InkEnvError> for SageError {
         fn from(e: InkEnvError) -> Self {
-            GovernorError::InkEnvError(format!("{:?}", e))
+            SageError::InkEnvError(format!("{:?}", e))
         }
     }
 
-    type Event = <GovernorContract as ContractEventBase>::Type;
+    type Event = <SageContract as ContractEventBase>::Type;
 
     #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -149,7 +149,7 @@ pub mod governor {
 
     #[ink(storage)]
     #[derive(SpreadAllocate)]
-    pub struct GovernorContract {
+    pub struct SageContract {
         proposal_votes: Mapping<ProposalId, ProposalVote>,
         proposals: Mapping<ProposalId, Proposal>,
         votes: Mapping<(ProposalId, AccountId), ()>,
@@ -159,7 +159,7 @@ pub mod governor {
         database_contract: Option<AccountId>,
     }
 
-    impl GovernorContract {
+    impl SageContract {
         #[ink(constructor)]
         pub fn new(
             version: u8,
@@ -169,9 +169,9 @@ pub mod governor {
             database_hash: Hash
         ) -> Self {
             let token_contract = Self
-                ::instantiate_contract(TokenContractRef::new(token_owners), token_hash, version)
+                ::instantiate_contract(WisdomTokenRef::new(token_owners), token_hash, version)
                 .unwrap_or_else(|error| {
-                    panic!("failed to instantiate the TokenContract: {:?}", error)
+                    panic!("failed to instantiate the WisdomToken: {:?}", error)
                 });
             let database_contract = Self
                 ::instantiate_contract(DatabaseContractRef::new(), database_hash, version)
@@ -188,7 +188,7 @@ pub mod governor {
         }
  
         // For use in tests:
-        // doesn't call TokenContract and DatabaseContract
+        // doesn't call WisdomToken and DatabaseContract
         #[ink(constructor)]
         pub fn test(quorum: Percentage) -> Self {
             initialize_contract(|instance: &mut Self| {
@@ -200,7 +200,7 @@ pub mod governor {
 
         // Propose a new item to the database
         #[ink(message)]
-        pub fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
+        pub fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, SageError> {
             self.require_token(Self::env().caller())?;
             let proposal = Proposal::item_add(item, description);
 
@@ -213,10 +213,10 @@ pub mod governor {
 
         // Propose modification to existing item in the database
         #[ink(message)]
-        pub fn propose_modify(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
+        pub fn propose_modify(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, SageError> {
             self.require_token(Self::env().caller())?;
             if !self.is_item_in_database(item_id) {
-                return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
+                return Err(SageError::DatabaseError(DatabaseError::IdNotFound));
             }
 
             let proposal = Proposal::item_modify(item_id, item, description);
@@ -229,7 +229,7 @@ pub mod governor {
         }
 
         #[ink(message)]
-        pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
+        pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, SageError> {
             self.require_token(Self::env().caller())?;
             let proposal = Proposal::token_mint(recipient, description);
 
@@ -243,15 +243,15 @@ pub mod governor {
         // Vote "for" this proposal
         // Not voting is equivalent to "against", for now
         #[ink(message)]
-        pub fn vote(&mut self, proposal_id: ProposalId) -> Result<(), GovernorError> {
+        pub fn vote(&mut self, proposal_id: ProposalId) -> Result<(), SageError> {
             let caller = self.env().caller();
-            let proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
+            let proposal = self.proposals.get(&proposal_id).ok_or(SageError::ProposalNotFound)?;
             if proposal.executed {
-                return Err(GovernorError::ProposalAlreadyExecuted)
+                return Err(SageError::ProposalAlreadyExecuted)
             }
             
             if self.votes.get(&(proposal_id, caller)).is_some() {
-                return Err(GovernorError::AlreadyVoted)
+                return Err(SageError::AlreadyVoted)
             }
 
             self.votes.insert(&(proposal_id, caller), &());
@@ -267,15 +267,15 @@ pub mod governor {
 
         // Executes the proposal, and returns the item id in the database (if relevant)
         #[ink(message)]
-        pub fn execute(&mut self, proposal_id: ProposalId) -> Result<Option<ItemId>, GovernorError> {
-            let mut proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
+        pub fn execute(&mut self, proposal_id: ProposalId) -> Result<Option<ItemId>, SageError> {
+            let mut proposal = self.proposals.get(&proposal_id).ok_or(SageError::ProposalNotFound)?;
             if proposal.executed {
-                return Err(GovernorError::ProposalAlreadyExecuted);
+                return Err(SageError::ProposalAlreadyExecuted);
             }
 
             let proposal_vote = self.proposal_votes.get(proposal_id).unwrap_or_default();
             if proposal_vote.for_votes < self.quorum {
-                return Err(GovernorError::QuorumNotReached)
+                return Err(SageError::QuorumNotReached)
             }
 
             let item_id = self._execute(&proposal)?;
@@ -332,12 +332,12 @@ pub mod governor {
             self.env().terminate_contract(self.env().caller());
         }
 
-        fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
+        fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, SageError> {
             match &proposal.category {
                 ProposalCategory::Token { recipient } => {
                     if let Some(token_contract) = self.token_contract {
                         let mut token = Self
-                            ::contract_from_account_id::<TokenContractRef>(token_contract);
+                            ::contract_from_account_id::<WisdomTokenRef>(token_contract);
                         token.mint(*recipient)?;
                     }
                 },
@@ -385,11 +385,11 @@ pub mod governor {
             id
         }
 
-        fn require_token(&self, caller: AccountId) -> Result<(), GovernorError> {
+        fn require_token(&self, caller: AccountId) -> Result<(), SageError> {
             if let Some(token_contract) = self.token_contract {
                 let balance = PSP34Ref::balance_of(&token_contract, caller);
                 if balance == 0 {
-                    return Err(GovernorError::TokenOwnershipRequired);
+                    return Err(SageError::TokenOwnershipRequired);
                 }
             }
             Ok(())
@@ -397,7 +397,7 @@ pub mod governor {
 
         fn contract_from_account_id<TContract>(id: AccountId) -> TContract
             where TContract: FromAccountId<Environment> {
-            <TContract as FromAccountId<super::governor::Environment>>
+            <TContract as FromAccountId<super::sage::Environment>>
                 ::from_account_id(id)
         }
         
@@ -421,11 +421,11 @@ pub mod governor {
                 .salt_bytes([version.to_le_bytes().as_ref(), Self::env().caller().as_ref()].concat())
                 .endowment(0)
                 .instantiate()?;
-            Ok(<TContract as ToAccountId<super::governor::Environment>>
+            Ok(<TContract as ToAccountId<super::sage::Environment>>
                 ::to_account_id(&contract_ref))
         }
 
-        fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
+        fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<SageContract> {
             emitter.emit_event(event);
         }
     }
@@ -465,16 +465,16 @@ pub mod governor {
 
         #[ink::test]
         fn constructor_works() {
-            let governor = GovernorContract::test(75);
-            assert_eq!(governor.quorum, 75);
+            let sage = SageContract::test(75);
+            assert_eq!(sage.quorum, 75);
         }
 
         #[ink::test]
         fn propose_add_works() {
-            let mut governor = GovernorContract::test(75);
-            assert_eq!(governor.propose_add("test".to_string(), "test desc".to_string()), Ok(0));
-            assert_eq!(governor.next_proposal_id, 1);
-            assert_eq!(governor.get_proposal(0), Some(Proposal {
+            let mut sage = SageContract::test(75);
+            assert_eq!(sage.propose_add("test".to_string(), "test desc".to_string()), Ok(0));
+            assert_eq!(sage.next_proposal_id, 1);
+            assert_eq!(sage.get_proposal(0), Some(Proposal {
                 category: ProposalCategory::Database {
                     kind: ProposalDatabaseKind::Add,
                     item: "test".to_string(),
@@ -486,12 +486,12 @@ pub mod governor {
         
         #[ink::test]
         fn propose_modify_works() {
-            let mut governor = GovernorContract::test(75);
+            let mut sage = SageContract::test(75);
             // NOTE: not testing modification of non-existing items, because
             // injecting a database contract instance is problematic
-            assert_eq!(governor.propose_modify(0, "test".to_string(), "test desc".to_string()), Ok(0));
-            assert_eq!(governor.next_proposal_id, 1);
-            assert_eq!(governor.get_proposal(0), Some(Proposal {
+            assert_eq!(sage.propose_modify(0, "test".to_string(), "test desc".to_string()), Ok(0));
+            assert_eq!(sage.next_proposal_id, 1);
+            assert_eq!(sage.get_proposal(0), Some(Proposal {
                 category: ProposalCategory::Database {
                     kind: ProposalDatabaseKind::Modify(0),
                     item: "test".to_string(),
@@ -504,10 +504,10 @@ pub mod governor {
         #[ink::test]
         fn propose_mint_works() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::test(75);
-            assert_eq!(governor.propose_mint(alice, "test desc".to_string()), Ok(0));
-            assert_eq!(governor.next_proposal_id, 1);
-            assert_eq!(governor.get_proposal(0), Some(Proposal {
+            let mut sage = SageContract::test(75);
+            assert_eq!(sage.propose_mint(alice, "test desc".to_string()), Ok(0));
+            assert_eq!(sage.next_proposal_id, 1);
+            assert_eq!(sage.get_proposal(0), Some(Proposal {
                 category: ProposalCategory::Token {
                     recipient: alice,
                 },
@@ -519,91 +519,91 @@ pub mod governor {
         #[ink::test]
         fn vote_works() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(alice);
-            assert!(governor.vote(0).is_ok(), "voting was expected to succeed");
-            assert!(governor.has_voted(0, alice), "Alice was expected to have voted");
-            assert_eq!(governor.get_proposal_vote(0), Some(ProposalVote { for_votes: 50 }));
+            assert!(sage.vote(0).is_ok(), "voting was expected to succeed");
+            assert!(sage.has_voted(0, alice), "Alice was expected to have voted");
+            assert_eq!(sage.get_proposal_vote(0), Some(ProposalVote { for_votes: 50 }));
         }
 
         #[ink::test]
         fn vote_wrong_proposal_id_fails() {
-            let mut governor = GovernorContract::test(75);
-            assert_eq!(governor.vote(0), Result::Err(GovernorError::ProposalNotFound));
+            let mut sage = SageContract::test(75);
+            assert_eq!(sage.vote(0), Result::Err(SageError::ProposalNotFound));
         }
 
         #[ink::test]
         fn vote_double_vote_fails() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(alice);
-            governor.vote(0).ok();
-            assert_eq!(governor.vote(0), Result::Err(GovernorError::AlreadyVoted));
+            sage.vote(0).ok();
+            assert_eq!(sage.vote(0), Result::Err(SageError::AlreadyVoted));
         }
 
         #[ink::test]
         fn vote_for_executed_proposal_fails() {
             let accounts = get_default_test_accounts();
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(accounts.alice);
-            governor.vote(0).ok();
+            sage.vote(0).ok();
             set_caller(accounts.bob);
-            governor.vote(0).ok();
-            governor.execute(0).ok();
-            assert_eq!(governor.vote(0), Result::Err(GovernorError::ProposalAlreadyExecuted));
+            sage.vote(0).ok();
+            sage.execute(0).ok();
+            assert_eq!(sage.vote(0), Result::Err(SageError::ProposalAlreadyExecuted));
         }
         
         #[ink::test]
         fn execute_works() {
             let accounts = get_default_test_accounts();
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(accounts.alice);
-            governor.vote(0).ok();
+            sage.vote(0).ok();
             set_caller(accounts.bob);
-            governor.vote(0).ok();
-            assert!(governor.execute(0).is_ok(), "executing a proposal was expected to succeed");
-            assert_eq!(governor.get_proposal_vote(0), Some(ProposalVote { for_votes: 100 }));
-            assert!(governor.get_proposal(0).unwrap().executed, "Proposal was expected to change execution status");
+            sage.vote(0).ok();
+            assert!(sage.execute(0).is_ok(), "executing a proposal was expected to succeed");
+            assert_eq!(sage.get_proposal_vote(0), Some(ProposalVote { for_votes: 100 }));
+            assert!(sage.get_proposal(0).unwrap().executed, "Proposal was expected to change execution status");
         }
 
         #[ink::test]
         fn execute_wrong_proposal_id_fails() {
-            let mut governor = GovernorContract::test(75);
-            assert_eq!(governor.execute(0), Result::Err(GovernorError::ProposalNotFound));
+            let mut sage = SageContract::test(75);
+            assert_eq!(sage.execute(0), Result::Err(SageError::ProposalNotFound));
         }
 
         #[ink::test]
         fn execute_no_quorum_fails() {
            let alice = get_default_test_accounts().alice;
-           let mut governor = GovernorContract::test(75);
-           governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+           let mut sage = SageContract::test(75);
+           sage.propose_add("test".to_string(), "test desc".to_string()).ok();
            set_caller(alice);
-           governor.vote(0).ok();
-           assert_eq!(governor.execute(0), Result::Err(GovernorError::QuorumNotReached));
+           sage.vote(0).ok();
+           assert_eq!(sage.execute(0), Result::Err(SageError::QuorumNotReached));
         }
 
         #[ink::test]
         fn execute_executed_proposal_fails() {
             let accounts = get_default_test_accounts();
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(accounts.alice);
-            governor.vote(0).ok();
+            sage.vote(0).ok();
             set_caller(accounts.bob);
-            governor.vote(0).ok();
-            governor.execute(0).ok();
-            assert_eq!(governor.execute(0), Result::Err(GovernorError::ProposalAlreadyExecuted));
+            sage.vote(0).ok();
+            sage.execute(0).ok();
+            assert_eq!(sage.execute(0), Result::Err(SageError::ProposalAlreadyExecuted));
         }
 
         #[ink::test]
         fn event_on_proposal_added() {
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
-            governor.propose_modify(0, "test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
+            sage.propose_modify(0, "test".to_string(), "test desc".to_string()).ok();
             
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_propose_event(
@@ -619,10 +619,10 @@ pub mod governor {
         #[ink::test]
         fn event_on_vote_casted() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(alice);
-            governor.vote(0).ok();
+            sage.vote(0).ok();
 
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_vote_event(
@@ -635,13 +635,13 @@ pub mod governor {
         #[ink::test]
         fn event_on_proposal_executed() {
             let accounts = get_default_test_accounts();
-            let mut governor = GovernorContract::test(75);
-            governor.propose_add("test".to_string(), "test desc".to_string()).ok();
+            let mut sage = SageContract::test(75);
+            sage.propose_add("test".to_string(), "test desc".to_string()).ok();
             set_caller(accounts.alice);
-            governor.vote(0).ok();
+            sage.vote(0).ok();
             set_caller(accounts.bob);
-            governor.vote(0).ok();
-            governor.execute(0).ok();
+            sage.vote(0).ok();
+            sage.execute(0).ok();
 
             let recorded_events = recorded_events().collect::<Vec<_>>();
             assert_expected_execute_event(

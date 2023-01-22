@@ -10,8 +10,8 @@ TOKEN_ADDRESS=""
 DATABASE_CODE_HASH=""
 DATABASE_ADDRESS=""
 
-GOVERNOR_CODE_HASH=""
-GOVERNOR_ADDRESS=""
+SAGE_CODE_HASH=""
+SAGE_ADDRESS=""
 
 function get_timestamp {
     echo "$(date +'%Y-%m-%d %H:%M:%S')"
@@ -57,32 +57,32 @@ function deploy_database_contract {
     echo "Database code hash: ${DATABASE_CODE_HASH}"
 }
 
-function deploy_governor_contract {
-    GOVERNOR_CODE_HASH=$(deploy_contract "governor")
-    echo "Governor code hash: ${GOVERNOR_CODE_HASH}"
+function deploy_sage_contract {
+    SAGE_CODE_HASH=$(deploy_contract "sage")
+    echo "Sage code hash: ${SAGE_CODE_HASH}"
 }
 
-function instantiate_governor_contract {
-    cd "$CONTRACTS_PATH"/governor
+function instantiate_sage_contract {
+    cd "$CONTRACTS_PATH"/sage
     result=$(cargo contract instantiate \
         --url "$NODE_URL" \
         --suri "$AUTHORITY_SEED" \
-        --code-hash "$GOVERNOR_CODE_HASH" \
+        --code-hash "$SAGE_CODE_HASH" \
         --constructor new \
 	      --args 0 "[5G6Mx3WvwaxMCDv6fGEEtGDuFy6P6NozQcXGesde8dc1W6D1, 5H3L1ivDSCnFbYgvoBbugqMJMU9AKVovn1njLapYumugnAq4]" \
           25 "$TOKEN_CODE_HASH" "$DATABASE_CODE_HASH")
     
     if [ -n "$result" ]; then
-        echo "$result" > governor.out
+        echo "$result" > sage.out
     fi
 
-    GOVERNOR_ADDRESS=$(echo "$result" | grep -A2 "Event Contracts ➜ Instantiated" | grep contract | tail -1 | cut -d ' ' -f12)
-    echo "Governor address: ${GOVERNOR_ADDRESS}"
+    SAGE_ADDRESS=$(echo "$result" | grep -A2 "Event Contracts ➜ Instantiated" | grep contract | tail -1 | cut -d ' ' -f12)
+    echo "Sage address: ${SAGE_ADDRESS}"
 
     result=$(cargo contract call \
         --url "$NODE_URL" \
         --suri "$AUTHORITY_SEED" \
-        --contract "$GOVERNOR_ADDRESS" \
+        --contract "$SAGE_ADDRESS" \
 	--dry-run \
 	-m get_database)
     
@@ -96,7 +96,7 @@ function instantiate_governor_contract {
     result=$(cargo contract call \
         --url "$NODE_URL" \
         --suri "$AUTHORITY_SEED" \
-        --contract "$GOVERNOR_ADDRESS" \
+        --contract "$SAGE_ADDRESS" \
 	--dry-run \
 	-m get_token)
     
@@ -114,8 +114,8 @@ build_contract "token" || error "Failed to build the contract"
 log_progress "Building Database contract"
 build_contract "database" || error "Failed to build the contract"
 
-log_progress "Building Governor contract"
-build_contract "governor" || error "Failed to build the contract"
+log_progress "Building Sage contract"
+build_contract "sage" || error "Failed to build the contract"
 
 log_progress "Deploying Token contract"
 deploy_token_contract || error "Failed to deploy contract"
@@ -123,11 +123,11 @@ deploy_token_contract || error "Failed to deploy contract"
 log_progress "Deploying Database contract"
 deploy_database_contract || error "Failed to deploy contract"
 
-log_progress "Deploying Governor contract"
-deploy_governor_contract || error "Failed to deploy contract"
+log_progress "Deploying Sage contract"
+deploy_sage_contract || error "Failed to deploy contract"
 
-log_progress "Instantiating Governor contract"
-instantiate_governor_contract || error "Failed to instantiate contract"
+log_progress "Instantiating Sage contract"
+instantiate_sage_contract || error "Failed to instantiate contract"
 
 cd "$CONTRACTS_PATH"
 jq -n \
@@ -135,15 +135,15 @@ jq -n \
     --arg token_address "${TOKEN_ADDRESS}" \
     --arg database_code_hash "${DATABASE_CODE_HASH}" \
     --arg database_address "${DATABASE_ADDRESS}" \
-    --arg governor_code_hash "${GOVERNOR_CODE_HASH}" \
-    --arg governor_address "${GOVERNOR_ADDRESS}" \
+    --arg sage_code_hash "${SAGE_CODE_HASH}" \
+    --arg sage_address "${SAGE_ADDRESS}" \
     '{
         "token_code_hash" : $token_code_hash,
         "token_address" : $token_address,
         "database_code_hash" : $database_code_hash,
         "database_address" : $database_address,
-        "governor_code_hash" : $governor_code_hash,
-        "governor_address" : $governor_address
+        "sage_code_hash" : $sage_code_hash,
+        "sage_address" : $sage_address
     }' > addresses.json
 
 log_progress "Finished initialization. See addresses in $(pwd)/addresses.json"
@@ -154,4 +154,4 @@ mkdir -p "$FRONTEND_PATH"/src/metadata
 cp "$CONTRACTS_PATH"/addresses.json "$FRONTEND_PATH"/src/metadata || error "Please deploy the contracts first (addresses.json not found)"
 cp "$CONTRACTS_PATH"/token/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/token_metadata.json || error "Please build Token contract first (metadata.json not found)"
 cp "$CONTRACTS_PATH"/database/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/database_metadata.json || error "Please build Database contract first (metadata.json not found)"
-cp "$CONTRACTS_PATH"/governor/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/governor_metadata.json || error "Please build Governor contract first (metadata.json not found)"
+cp "$CONTRACTS_PATH"/sage/target/ink/metadata.json "$FRONTEND_PATH"/src/metadata/sage_metadata.json || error "Please build Sage contract first (metadata.json not found)"

@@ -18,5 +18,5 @@ WORKDIR /workspace/
 COPY . .
 RUN cd token && cargo +nightly contract build --release
 RUN cd database && cargo +nightly contract build --release
-RUN cd governor && cargo +nightly contract build --release
+RUN cd sage && cargo +nightly contract build --release
 
