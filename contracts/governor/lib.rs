@@ -107,6 +107,8 @@ pub mod governor {
         }
     }
 
+    pub const ONE_MINUTE: u64 = 60 * 1000;
+
     #[derive(Default, Debug, PartialEq, Eq, PackedLayout, SpreadLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Proposal {
@@ -246,7 +248,7 @@ pub mod governor {
         // Propose a new item to the database
         fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
             let now = self.env().block_timestamp();
-            let proposal = Proposal::item_add(item, description, now + 60 * 1000);
+            let proposal = Proposal::item_add(item, description, now + ONE_MINUTE);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -282,7 +284,7 @@ pub mod governor {
             }
 
             let now = self.env().block_timestamp();
-            let proposal = Proposal::item_modify(item_id, item, description, now + 60 * 1000);
+            let proposal = Proposal::item_modify(item_id, item, description, now + ONE_MINUTE);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -318,7 +320,7 @@ pub mod governor {
             }
             
             let now = self.env().block_timestamp();
-            let proposal = Proposal::token_mint(recipient, description, now + 60 * 1000);
+            let proposal = Proposal::token_mint(recipient, description, now + ONE_MINUTE);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -339,7 +341,7 @@ pub mod governor {
             }
 
             let now = self.env().block_timestamp();
-            let proposal = Proposal::token_burn(holder, description, now + 60 * 1000);
+            let proposal = Proposal::token_burn(holder, description, now + ONE_MINUTE);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);

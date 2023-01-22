@@ -67,7 +67,6 @@ export const isActive = (proposal: ProposalBase): boolean => {
   if (proposal.executed) return false;
 
   const now = Date.now();
-  console.log(`${proposal}: ${now}`);
   return (now <= proposal.voteEnd || isQuorumReached(proposal));
 };
 
