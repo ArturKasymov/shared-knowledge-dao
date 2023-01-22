@@ -22,9 +22,9 @@ const Item = styled.div`
     position: relative;
     margin: 12px;
     align-self: center;
-    border: 2px solid transparent;
+    /*border: 2px solid transparent;
     border-color: #0ae0df;
-    border-radius: 50%;
+    border-radius: 50%;*/
     text-align: center;
     display: inline-block;
     font-size: 2rem;

@@ -4,8 +4,6 @@ import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
 import type { EventRecord } from '@polkadot/types/interfaces';
 
-import HeroHeading from 'components/HeroHeading';
-import Layout from 'components/Layout';
 import { ProposalToken } from 'components/Proposal';
 import { displayErrorToast } from 'components/NotificationToast';
 import ToggleSwitch from 'components/ToggleSwitch';
@@ -41,11 +39,17 @@ import TokenProposeMintPopup from './TokenProposePopup';
 
 const Wrapper = styled.div`
   color: ${({ theme }) => theme.colors.white};
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 4%;
 
   .toggle-switch-wrapper {
     width: 100%;
     position: absolute;
-    top: 280px;
+    top: 360px;
     left: -200px;
   }
 `;
@@ -166,7 +170,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
       key={proposal.id}
       id={proposal.id}
       action={proposal.kind === 'tokenMint' ? 'Mint' : 'Burn'}
-      recipientAddress={proposal.recipient}
+      accountAddress={proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder}
       isExecuted={proposal.executed}
       displayDetails={displayProposalDetails}
     />
@@ -175,10 +179,11 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
   const proposalToPopup = (proposal: ProposalTokenModel) => {
     const canVote = !!loggedAccount && !proposal.hasSelfVoted;
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
+    const accountAddress = (proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder);
     return (
       <ProposalMintDetailsPopup
         id={proposal.id}
-        recipientAddress={proposal.recipient}
+        accountAddress={accountAddress}
         votes={proposal.votes}
         canVote={canVote}
         canExecute={canExecute}
@@ -198,22 +203,19 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
         />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
-      <Layout api={api}>
-        <Wrapper className="wrapper">
-          <HeroHeading variant="tokens" />
-          <div className="toggle-switch-wrapper">
-            <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
-          </div>
-          <ProposalsContainer>
-            {testProposals.map((p) => (
-              <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
-                {proposalToReactNode(p)}
-              </SmoothOptional>
-            ))}
-            <PlaceholderProposal action="M" onClick={() => setProposeTokenDisplay(true)} />
-          </ProposalsContainer>
-        </Wrapper>
-      </Layout>
+      <Wrapper>
+        <div className="toggle-switch-wrapper">
+          <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
+        </div>
+        <ProposalsContainer>
+          {testProposals.map((p) => (
+            <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
+              {proposalToReactNode(p)}
+            </SmoothOptional>
+          ))}
+          <PlaceholderProposal action="M" onClick={() => setProposeTokenDisplay(true)} />
+        </ProposalsContainer>
+      </Wrapper>
     </>
   );
 };

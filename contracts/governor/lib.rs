@@ -75,33 +75,32 @@ pub mod governor {
         Modify(ItemId),
     }
 
-    #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
+    #[derive(Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProposalTokenKind {
-        #[default]
-        Mint,
-        Burn,
+        Mint(AccountId),
+        Burn(AccountId),
     }
 
     #[derive(Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProposalCategory {
-        Token {
-            kind: ProposalTokenKind,
-            recipient: AccountId,
-        },
+        Token(ProposalTokenKind),
         Database {
             kind: ProposalDatabaseKind,
             item: String,
         },
     }
 
+    impl Default for ProposalTokenKind {
+        fn default() -> Self {
+            ProposalTokenKind::Mint(AccountId::default())
+        }
+    }
+
     impl Default for ProposalCategory {
         fn default() -> Self {
-            Self::Token {
-                kind: ProposalTokenKind::default(),
-                recipient: AccountId::default(),
-            }
+            Self::Token(ProposalTokenKind::default())
         }
     }
 
@@ -117,21 +116,19 @@ pub mod governor {
     impl Proposal {
         fn token_mint(recipient: AccountId, description: String) -> Self {
             Proposal {
-                category: ProposalCategory::Token {
-                    kind: ProposalTokenKind::Mint,
-                    recipient
-                },
+                category: ProposalCategory::Token(
+                    ProposalTokenKind::Mint(recipient),
+                ),
                 executed: false,
                 description,
             }
         }
         
-        fn token_burn(recipient: AccountId, description: String) -> Self {
+        fn token_burn(holder: AccountId, description: String) -> Self {
             Proposal {
-                category: ProposalCategory::Token {
-                    kind: ProposalTokenKind::Burn,
-                    recipient
-                },
+                category: ProposalCategory::Token(
+                    ProposalTokenKind::Burn(holder),
+                ),
                 executed: false,
                 description,
             }
@@ -402,15 +399,15 @@ pub mod governor {
 
         fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
             match &proposal.category {
-                 ProposalCategory::Token { kind, recipient } => {
+                 ProposalCategory::Token(kind) => {
                     if let Some(token_contract) = self.token_contract {
                         let mut token = Self
                             ::contract_from_account_id::<TokenContractRef>(token_contract);
                         match kind {
-                            ProposalTokenKind::Mint =>
+                            ProposalTokenKind::Mint(recipient) =>
                                 _ = token.mint(*recipient)?,
-                            ProposalTokenKind::Burn =>
-                                token.burn(*recipient)?,
+                            ProposalTokenKind::Burn(holder) =>
+                                token.burn(*holder)?,
                         }
                     }
                 },
@@ -666,10 +663,9 @@ pub mod governor {
             assert_eq!(governor.propose_mint(alice, "test desc".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
-                category: ProposalCategory::Token {
-                    kind: ProposalTokenKind::Mint,
-                    recipient: alice,
-                },
+                category: ProposalCategory::Token(
+                    ProposalTokenKind::Mint(alice),
+                ),
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -682,10 +678,9 @@ pub mod governor {
             assert_eq!(governor.propose_burn(alice, "test desc".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
-                category: ProposalCategory::Token {
-                    kind: ProposalTokenKind::Burn,
-                    recipient: alice,
-                },
+                category: ProposalCategory::Token(
+                    ProposalTokenKind::Burn(alice),
+                ),
                 executed: false,
                 description: "test desc".to_string(),
             }));

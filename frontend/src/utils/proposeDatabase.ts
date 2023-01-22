@@ -14,7 +14,8 @@ import addresses from '../metadata/addresses.json';
 export const proposeAddItem = async (
   text: string,
   loggedUser: InjectedAccountWithMeta,
-  api: ApiPromise
+  api: ApiPromise,
+  onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
@@ -23,7 +24,7 @@ export const proposeAddItem = async (
   }
 
   await contract.tx
-    .proposeAdd(
+    .proposeAddGovernor(
       {
         gasLimit: GAS_LIMIT_VALUE,
       },
@@ -31,7 +32,10 @@ export const proposeAddItem = async (
       '' // description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      handleProposalAddedEvent(events, status, api);
+      const proposalId = handleProposalAddedEvent(events, status, api);
+      if (proposalId !== null) {
+        onSuccess?.(proposalId);
+      }
     })
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
@@ -42,7 +46,8 @@ export const proposeModifyItem = async (
   id: number,
   text: string,
   loggedUser: InjectedAccountWithMeta,
-  api: ApiPromise
+  api: ApiPromise,
+  onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
@@ -51,7 +56,7 @@ export const proposeModifyItem = async (
   }
 
   await contract.tx
-    .proposeModify(
+    .proposeModifyGovernor(
       {
         gasLimit: GAS_LIMIT_VALUE,
       },
@@ -60,7 +65,10 @@ export const proposeModifyItem = async (
       '' // description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
-      handleProposalAddedEvent(events, status, api);
+      const proposalId = handleProposalAddedEvent(events, status, api);
+      if (proposalId !== null) {
+        onSuccess?.(proposalId);
+      }
     })
     .catch((error) => {
       displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);

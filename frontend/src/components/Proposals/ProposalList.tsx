@@ -17,6 +17,7 @@ import { RootState } from 'redux/store';
 import {
   setAllProposals,
   setSelfVoteWeight,
+  onProposed as addProposal,
   onVoted as updateProposalSelfVoted,
   onExecuted as updateProposalExecuted,
 } from 'redux/slices/proposalsSlice';
@@ -27,6 +28,7 @@ import { getVoteWeight } from 'utils/getVoteWeight';
 import {
   isQuorumReached,
   isDatabaseProposal,
+  newAddProposal,
   Proposal as ProposalModel,
 } from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
@@ -143,7 +145,9 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+      proposeAddDatabaseItem(text, loggedAccount, api, (proposalId) =>
+        dispatch(addProposal(newAddProposal(proposalId, text)))
+      ).then(() => setProposeNewItemDisplay(false));
     }
   };
 

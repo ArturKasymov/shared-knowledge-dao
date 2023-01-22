@@ -56,17 +56,17 @@ const getRawProposal = async (
     }
 
     if (category.isToken) {
-      const tkCategory = category.asToken;
-      const recipient = tkCategory.get('recipient').toString();
+      const tkKind = category.asToken;
+      const rProposal = { id, executed };
 
-      const rProposal = { id, recipient, executed };
-
-      if (tkCategory.kind.isMint) {
-        return { kind: 'tokenMint', ...rProposal };
+      if (tkKind.isMint) {
+        const recipient = tkKind.asMint.toString();
+        return { kind: 'tokenMint', recipient, ...rProposal };
       }
 
-      if (tkCategory.kind.isBurn) {
-        return { kind: 'tokenBurn', ...rProposal };
+      if (tkKind.isBurn) {
+        const holder = tkKind.asBurn.toString();
+        return { kind: 'tokenBurn', holder, ...rProposal };
       }
     }
 

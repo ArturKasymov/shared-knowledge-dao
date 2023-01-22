@@ -3,20 +3,23 @@ import styled from 'styled-components';
 
 import ProposalTemplate from '../Common';
 
-const ProposalContent = styled.h3`
-  align-self: center;
-  font-weight: 500;
-  width: 100%;
+const ProposalContent = styled.div`
+  flex-grow: 1;
+  align-self: stretch;
+  margin: 0;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
   cursor: pointer;
-  height: 100%;
   background-color: ${({ theme }) => theme.colors.primaryLighter};
-  color: ${({ theme }) => theme.colors.night[100]};
   display: flex;
   align-items: center;
   justify-content: center;
+
+  h3 {
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.night[100]};
+    text-overflow: ellipsis;
+  }
 `;
 
 interface PlaceholderProposalProps {
@@ -27,7 +30,7 @@ interface PlaceholderProposalProps {
 const PlaceholderProposal = ({ action, onClick }: PlaceholderProposalProps): JSX.Element => (
   <ProposalTemplate action={action} isExecuted={false}>
     <ProposalContent role="presentation" onClick={onClick}>
-      +PROPOSE
+      <h3>+PROPOSE</h3>
     </ProposalContent>
   </ProposalTemplate>
 );

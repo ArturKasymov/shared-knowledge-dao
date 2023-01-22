@@ -23,7 +23,7 @@ const ProposalContent = styled.h3`
 interface ProposalTokenProps {
   id: number;
   action: 'Mint' | 'Burn';
-  recipientAddress: string;
+  accountAddress: string;
   isExecuted: boolean;
   displayDetails: (id: number) => void;
 }
@@ -31,13 +31,13 @@ interface ProposalTokenProps {
 const ProposalToken = ({
   id,
   action,
-  recipientAddress,
+  accountAddress,
   isExecuted,
   displayDetails,
 }: ProposalTokenProps): JSX.Element => (
   <ProposalTemplate action={action.substring(0, 1)} isExecuted={isExecuted}>
     <ProposalContent role="presentation" onClick={() => displayDetails(id)}>
-      {recipientAddress}
+      {accountAddress}
     </ProposalContent>
   </ProposalTemplate>
 );

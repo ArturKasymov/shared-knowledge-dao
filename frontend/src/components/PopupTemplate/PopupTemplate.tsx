@@ -6,7 +6,8 @@ import { useOutsideClickCallback } from 'utils/useOutsideClickCallback';
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
-  position: fixed;
+  top: 0;
+  position: absolute;
   color: ${({ theme }) => theme.colors.white};
   background-color: ${({ theme }) => theme.colors.backgroundDimmed};
   z-index: 3000;

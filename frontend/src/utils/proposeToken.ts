@@ -15,7 +15,7 @@ export const proposeMint = async (
   recipientAddress: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
-  onSuccess: (proposalId: number) => void
+  onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
@@ -34,7 +34,38 @@ export const proposeMint = async (
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
       if (proposalId !== null) {
-        onSuccess(proposalId);
+        onSuccess?.(proposalId);
+      }
+    })
+    .catch((error) => {
+      displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
+    });
+};
+
+export const proposeBurn = async (
+  holderAddress: string,
+  loggedUser: InjectedAccountWithMeta,
+  api: ApiPromise,
+  onSuccess?: (proposalId: number) => void
+): Promise<void> => {
+  const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
+  const injector = await getInjector(loggedUser);
+  if (!injector) {
+    return;
+  }
+
+  await contract.tx
+    .proposeBurn(
+      {
+        gasLimit: GAS_LIMIT_VALUE,
+      },
+      holderAddress,
+      '' // description
+    )
+    .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
+      const proposalId = handleProposalAddedEvent(events, status, api);
+      if (proposalId !== null) {
+        onSuccess?.(proposalId);
       }
     })
     .catch((error) => {
