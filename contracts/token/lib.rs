@@ -127,7 +127,7 @@ pub mod token {
             let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
             
             set_caller(accounts.bob);
-            assert!(token.burn(accounts.frank).is_err(), "Bob expected to have no call access");
+            assert!(token.burn(accounts.alice).is_err(), "Bob expected to have no call access");
         }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
