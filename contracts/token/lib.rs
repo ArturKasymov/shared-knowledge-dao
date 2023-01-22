@@ -22,6 +22,7 @@ pub mod token {
         ownable: ownable::Data,
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
+        holders: Vec<AccountId>,
         next_id: u8,
     }
 
@@ -30,11 +31,12 @@ pub mod token {
 
     impl TokenContract {
         #[ink(constructor)]
-        pub fn new(owners: Vec<AccountId>) -> Self {
+        pub fn new(holders: Vec<AccountId>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
                 instance._init_with_owner(Self::env().caller());
-                instance.next_id = owners.len() as u8;
-                for (i, account) in owners.iter().enumerate() {
+                instance.holders = holders.clone();
+                instance.next_id = holders.len() as u8;
+                for (i, account) in holders.iter().enumerate() {
                     instance._mint_to(*account, Id::U8(i as u8)).expect("Should mint");
                 }
             })
@@ -45,18 +47,31 @@ pub mod token {
         pub fn mint(&mut self, recipient: AccountId) -> Result<Id, PSP34Error> {
             let id = self.next_id();
             self._mint_to(recipient, Id::U8(id))?;
+            if self.balance_of(recipient) == 1 {
+                self.holders.push(recipient);
+            }
             Ok(Id::U8(id))
         }
         
         #[ink(message)]
         #[modifiers(only_owner)]
-        pub fn burn(&mut self, owner: AccountId) -> Result<(), PSP34Error> {
+        pub fn burn(&mut self, holder: AccountId) -> Result<(), PSP34Error> {
             let token_id = self.psp34
                 .balances
                 .enumerable
-                .get_value(&Some(&owner), &0)
+                .get_value(&Some(&holder), &0)
                 .ok_or(PSP34Error::TokenNotExists)?;
-            self._burn_from(owner, token_id)
+            self._burn_from(holder.clone(), token_id)?;
+            
+            if self.balance_of(holder) == 0 {
+                self.holders.retain(|account| account != &holder);
+            }
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn get_holders(&self) -> Vec<AccountId> {
+            self.holders.clone()
         }
 
         // (For testing) Deletes the contract from the blockchain.
@@ -88,6 +103,7 @@ pub mod token {
             assert_eq!(token.total_supply(), 2);
             assert_eq!(token.balance_of(accounts.alice), 1);
             assert_eq!(token.balance_of(accounts.bob), 1);
+            assert_eq!(token.get_holders(), vec![accounts.alice, accounts.bob]);
         }
 
         #[ink::test]
@@ -97,6 +113,7 @@ pub mod token {
             assert!(token.mint(accounts.frank).is_ok(), "Expected to mint");
             assert_eq!(token.total_supply(), 3);
             assert_eq!(token.balance_of(accounts.frank), 1);
+            assert_eq!(token.get_holders(), vec![accounts.alice, accounts.bob, accounts.frank]);
         }
 
         #[ink::test]
@@ -117,6 +134,7 @@ pub mod token {
             assert!(token.burn(accounts.alice).is_ok(), "Expected to burn");
             assert_eq!(token.total_supply(), 1);
             assert_eq!(token.balance_of(accounts.alice), 0);
+            assert_eq!(token.get_holders(), vec![accounts.bob]);
         }
         
         #[ink::test]
