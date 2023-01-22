@@ -70,7 +70,7 @@ function instantiate_governor_contract {
         --code-hash "$GOVERNOR_CODE_HASH" \
         --constructor new \
 	      --args 0 "[5G6Mx3WvwaxMCDv6fGEEtGDuFy6P6NozQcXGesde8dc1W6D1, 5H3L1ivDSCnFbYgvoBbugqMJMU9AKVovn1njLapYumugnAq4]" \
-          25 "$TOKEN_CODE_HASH" "$DATABASE_CODE_HASH")
+          25 100 "$TOKEN_CODE_HASH" "$DATABASE_CODE_HASH")
     
     if [ -n "$result" ]; then
         echo "$result" > governor.out
