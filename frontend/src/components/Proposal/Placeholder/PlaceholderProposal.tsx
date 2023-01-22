@@ -28,7 +28,7 @@ interface PlaceholderProposalProps {
 }
 
 const PlaceholderProposal = ({ action, onClick }: PlaceholderProposalProps): JSX.Element => (
-  <ProposalTemplate action={action} isExecuted={false}>
+  <ProposalTemplate action={action} isActive>
     <ProposalContent role="presentation" onClick={onClick}>
       <h3>+PROPOSE</h3>
     </ProposalContent>

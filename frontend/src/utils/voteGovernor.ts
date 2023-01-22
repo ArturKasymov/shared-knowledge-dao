@@ -29,6 +29,7 @@ const handleVoteCastedEvent = (events: EventRecord[], status: ExtrinsicStatus, a
 
 export const voteForProposal = async (
   id: number,
+  isFor: boolean,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise
 ): Promise<void> => {
@@ -44,7 +45,7 @@ export const voteForProposal = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       id,
-      api.createType('VoteType', 'For'),
+      api.createType('VoteType', isFor ? 'For' : 'Against')
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) =>
       handleVoteCastedEvent(events, status, api)

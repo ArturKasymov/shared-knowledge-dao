@@ -26,6 +26,7 @@ import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
 import {
   isQuorumReached,
+  isActive as isActiveProposal,
   isDatabaseProposal,
   newAddProposal,
   Proposal as ProposalModel,
@@ -74,7 +75,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     isDatabaseProposal
   );
   const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
-  const [showExecutedProposals, setShowExecutedProposals] = useState(false);
+  const [showInactiveProposals, setShowInactiveProposals] = useState(false);
   const [proposalDetailsDisplay, setProposalDetailsDisplay] =
     useState<ProposalDatabaseModel | null>(null);
   const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
@@ -111,14 +112,14 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     })();
   }, [getSelfVoteWeight, dispatch]);
 
-  const handleVote = (proposalId: number) => {
+  const handleVote = (proposalId: number, isFor: boolean) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      voteForProposal(proposalId, loggedAccount, api).then(() => {
+      voteForProposal(proposalId, isFor, loggedAccount, api).then(() => {
         setProposalDetailsDisplay(null);
         dispatch(updateProposalSelfVoted(proposalId));
       });
@@ -167,7 +168,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             key={proposal.id}
             id={proposal.id}
             item={proposal.item}
-            isExecuted={proposal.executed}
+            isActive={isActiveProposal(proposal)}
             displayDetails={displayProposalDetails}
           />
         );
@@ -178,7 +179,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             id={proposal.id}
             itemId={proposal.itemId}
             item={proposal.item}
-            isExecuted={proposal.executed}
+            isActive={isActiveProposal(proposal)}
             displayDetails={displayProposalDetails}
           />
         );
@@ -186,7 +187,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   };
 
   const proposalToPopup = (proposal: ProposalDatabaseModel) => {
-    const canVote = !!loggedAccount && !proposal.hasSelfVoted;
+    const canVote = !!loggedAccount && !proposal.hasSelfVoted && Date.now() <= proposal.voteEnd;
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
     switch (proposal.kind) {
       case 'itemAdd':
@@ -195,6 +196,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             id={proposal.id}
             item={proposal.item}
             votes={proposal.votes}
+            voteDeadline={new Date(proposal.voteEnd)}
             canVote={canVote}
             canExecute={canExecute}
             onPopupClose={() => setProposalDetailsDisplay(null)}
@@ -215,6 +217,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
             }
             proposedItem={proposal.item}
             votes={proposal.votes}
+            voteDeadline={new Date(proposal.voteEnd)}
             canVote={canVote}
             canExecute={canExecute}
             onPopupClose={() => setProposalDetailsDisplay(null)}
@@ -238,11 +241,11 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         <Wrapper className="wrapper">
           <HeroHeading variant="proposals" />
           <div className="toggle-switch-wrapper">
-            <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
+            <ToggleSwitch checked={showInactiveProposals} onChange={setShowInactiveProposals} />
           </div>
           <ProposalsContainer>
             {testProposals.map((p) => (
-              <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
+              <SmoothOptional key={p.id} show={showInactiveProposals || isActiveProposal(p)}>
                 {proposalToReactNode(p)}
               </SmoothOptional>
             ))}

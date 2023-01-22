@@ -25,6 +25,7 @@ import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
 import {
   isQuorumReached,
+  isActive as isActiveProposal,
   isTokenProposal,
   newMintProposal,
   Proposal as ProposalModel,
@@ -47,9 +48,9 @@ const Wrapper = styled.div`
 
   .toggle-switch-wrapper {
     width: 100%;
-    position: absolute;
-    top: 360px;
-    left: -200px;
+    position: fixed;
+    top: 480px;
+    left: 60px;
   }
 `;
 
@@ -77,7 +78,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
   const testProposals = useSelector((state: RootState) => state.proposals.proposals).filter(
     isTokenProposal
   );
-  const [showExecutedProposals, setShowExecutedProposals] = useState(false);
+  const [showInactiveProposals, setShowInactiveProposals] = useState(false);
   const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalTokenModel | null>(
     null
   );
@@ -116,14 +117,14 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
     })();
   }, [getSelfVoteWeight, dispatch]);
 
-  const handleVote = (proposalId: number) => {
+  const handleVote = (proposalId: number, isFor: boolean) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      voteForProposal(proposalId, loggedAccount, api).then(() => {
+      voteForProposal(proposalId, isFor, loggedAccount, api).then(() => {
         setProposalDetailsDisplay(null);
         dispatch(updateProposalSelfVoted(proposalId));
       });
@@ -170,7 +171,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
       id={proposal.id}
       action={proposal.kind === 'tokenMint' ? 'Mint' : 'Burn'}
       accountAddress={proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder}
-      isExecuted={proposal.executed}
+      isActive={isActiveProposal(proposal)}
       displayDetails={displayProposalDetails}
     />
   );
@@ -184,6 +185,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
         id={proposal.id}
         accountAddress={accountAddress}
         votes={proposal.votes}
+        voteDeadline={new Date(proposal.voteEnd)}
         canVote={canVote}
         canExecute={canExecute}
         onPopupClose={() => setProposalDetailsDisplay(null)}
@@ -195,6 +197,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
 
   return (
     <>
+      <>
       {proposeTokenDisplay && (
         <TokenProposeMintPopup
           onPopupClose={() => setProposeTokenDisplay(false)}
@@ -202,13 +205,14 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
         />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
-      <Wrapper>
+      </>
+        <Wrapper>
         <div className="toggle-switch-wrapper">
-          <ToggleSwitch checked={showExecutedProposals} onChange={setShowExecutedProposals} />
+          <ToggleSwitch checked={showInactiveProposals} onChange={setShowInactiveProposals} />
         </div>
         <ProposalsContainer>
           {testProposals.map((p) => (
-            <SmoothOptional key={p.id} show={showExecutedProposals || !p.executed}>
+            <SmoothOptional key={p.id} show={showInactiveProposals || isActiveProposal(p)}>
               {proposalToReactNode(p)}
             </SmoothOptional>
           ))}

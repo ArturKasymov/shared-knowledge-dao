@@ -23,12 +23,12 @@ const ProposalContent = styled.h3`
 interface ProposalAddProps {
   id: number;
   item: string;
-  isExecuted: boolean;
+  isActive: boolean;
   displayDetails: (id: number) => void;
 }
 
-const ProposalAdd = ({ id, item, isExecuted, displayDetails }: ProposalAddProps): JSX.Element => (
-  <ProposalTemplate action="A" isExecuted={isExecuted}>
+const ProposalAdd = ({ id, item, isActive, displayDetails }: ProposalAddProps): JSX.Element => (
+  <ProposalTemplate action="A" isActive={isActive}>
     <ProposalContent role="presentation" onClick={() => displayDetails(id)}>
       {item}
     </ProposalContent>

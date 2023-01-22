@@ -24,7 +24,7 @@ interface ProposalModifyProps {
   id: number;
   itemId: number;
   item: string;
-  isExecuted: boolean;
+  isActive: boolean;
   displayDetails: (id: number) => void;
 }
 
@@ -32,10 +32,10 @@ const ProposalModify = ({
   id,
   itemId,
   item,
-  isExecuted,
+  isActive,
   displayDetails,
 }: ProposalModifyProps): JSX.Element => (
-  <ProposalTemplate action={`M${itemId}`} isExecuted={isExecuted}>
+  <ProposalTemplate action={`M${itemId}`} isActive={isActive}>
     <ProposalContent role="presentation" onClick={() => displayDetails(id)}>
       {item}
     </ProposalContent>

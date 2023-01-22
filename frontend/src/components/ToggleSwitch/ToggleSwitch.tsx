@@ -79,7 +79,7 @@ const ToggleSwitch = ({ checked, onChange }: ToggleSwitchProps) => (
       onChange={(e) => onChange(e.target.checked)}
     />
     <div className="toggle-switch" />
-    <span className="toggle-label">Show executed</span>
+    <span className="toggle-label">Show inactive</span>
   </Wrapper>
 );
 

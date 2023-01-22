@@ -8,7 +8,7 @@ const ProposalWrapper = styled.div`
   display: flex;
   flex-direction: column;
 
-  &:not(.executed) {
+  &.active {
     border: 2px solid ${({ theme }) => theme.colors.primary};
   }
 `;
@@ -45,12 +45,12 @@ const Proposal = styled.div`
 
 interface ProposalTemplateProps {
   action: string;
-  isExecuted: boolean;
+  isActive: boolean;
   children: React.ReactNode;
 }
 
-const ProposalTemplate = ({ action, isExecuted, children }: ProposalTemplateProps): JSX.Element => (
-  <ProposalWrapper className={isExecuted ? 'executed' : ''}>
+const ProposalTemplate = ({ action, isActive, children }: ProposalTemplateProps): JSX.Element => (
+  <ProposalWrapper className={isActive ? 'active' : ''}>
     <Proposal>
       <div className="id-div">{action}</div>
       {children}

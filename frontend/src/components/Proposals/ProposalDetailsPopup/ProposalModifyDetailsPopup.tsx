@@ -46,10 +46,11 @@ interface ProposalModifyDetailsPopupProps {
   currentItem: string;
   proposedItem: string;
   votes: number;
+  voteDeadline: Date;
   canVote: boolean;
   canExecute: boolean;
   onPopupClose: () => void;
-  onVote: (id: number) => void;
+  onVote: (id: number, isFor: boolean) => void;
   onExecute: (id: number) => void;
 }
 
@@ -59,6 +60,7 @@ const ProposalModifyDetailsPopup = ({
   currentItem,
   proposedItem,
   votes,
+  voteDeadline,
   canVote,
   canExecute,
   onPopupClose,
@@ -68,6 +70,7 @@ const ProposalModifyDetailsPopup = ({
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
+    voteDeadline={voteDeadline}
     canVote={canVote}
     canExecute={canExecute}
     onPopupClose={onPopupClose}

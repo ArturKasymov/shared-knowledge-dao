@@ -44,7 +44,7 @@ export const newAddProposal = (id: number, item: string): ProposalItemAdd => ({
   item,
   votes: 0,
   hasSelfVoted: false,
-  voteEnd: new Date(new Date().getTime() + 1).getTime(), // FIXME
+  voteEnd: Date.now() + 60 * 1000, // FIXME
   executed: false,
   quorum: 100, // FIXME
 });
@@ -55,13 +55,21 @@ export const newMintProposal = (id: number, recipient: string): ProposalTokenMin
   recipient,
   votes: 0,
   hasSelfVoted: false,
-  voteEnd: new Date(new Date().getTime() + 1).getTime(), // FIXME
+  voteEnd: Date.now() + 60 * 1000, // FIXME
   executed: false,
   quorum: 100, // FIXME
 });
 
 export const isQuorumReached = (proposal: ProposalBase): boolean =>
   proposal.votes >= proposal.quorum;
+
+export const isActive = (proposal: ProposalBase): boolean => {
+  if (proposal.executed) return false;
+
+  const now = Date.now();
+  console.log(`${proposal}: ${now}`);
+  return (now <= proposal.voteEnd || isQuorumReached(proposal));
+};
 
 export const isDatabaseProposal = (proposal: Proposal): proposal is ProposalDatabase =>
   (proposal as ProposalDatabase).kind.substring(0, 4) === 'item';
