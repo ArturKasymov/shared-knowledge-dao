@@ -40,6 +40,7 @@ pub mod governor {
         ProposalAlreadyExecuted,
         AlreadyVoted,
         QuorumNotReached,
+        VotePeriodEnded,
         TokenOwnershipRequired,
         InsufficientTransferQuota,
         TokenError(PSP34Error),
@@ -108,49 +109,54 @@ pub mod governor {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Proposal {
         category: ProposalCategory,
+        vote_end: Timestamp,
         executed: bool,
         description: String,
     }
 
     // A few constructors for convenience
     impl Proposal {
-        fn token_mint(recipient: AccountId, description: String) -> Self {
+        fn token_mint(recipient: AccountId, description: String, vote_end: Timestamp) -> Self {
             Proposal {
                 category: ProposalCategory::Token(
                     ProposalTokenKind::Mint(recipient),
                 ),
+                vote_end,
                 executed: false,
                 description,
             }
         }
         
-        fn token_burn(holder: AccountId, description: String) -> Self {
+        fn token_burn(holder: AccountId, description: String, vote_end: Timestamp) -> Self {
             Proposal {
                 category: ProposalCategory::Token(
                     ProposalTokenKind::Burn(holder),
                 ),
+                vote_end,
                 executed: false,
                 description,
             }
         }
 
-        fn item_add(item: String, description: String) -> Self {
+        fn item_add(item: String, description: String, vote_end: Timestamp) -> Self {
             Proposal {
                 category: ProposalCategory::Database {
                     kind: ProposalDatabaseKind::Add,
                     item,
                 },
+                vote_end,
                 executed: false,
                 description,
             }
         }
 
-        fn item_modify(item_id: ItemId, item: String, description: String) -> Self {
+        fn item_modify(item_id: ItemId, item: String, description: String, vote_end: Timestamp) -> Self {
             Proposal {
                 category: ProposalCategory::Database {
                     kind: ProposalDatabaseKind::Modify(item_id),
                     item,
                 },
+                vote_end,
                 executed: false,
                 description,
             }
@@ -227,10 +233,13 @@ pub mod governor {
 
         // Propose a new item to the database
         fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            let proposal = Proposal::item_add(item, description);
+            let now = self.env().block_timestamp();
+            let proposal = Proposal::item_add(item, description, now + 60 * 1000);
+
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
             Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
+            
             Ok(id)
         }
 
@@ -254,7 +263,8 @@ pub mod governor {
                 return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
             }
 
-            let proposal = Proposal::item_modify(item_id, item, description);
+            let now = self.env().block_timestamp();
+            let proposal = Proposal::item_modify(item_id, item, description, now + 60 * 1000);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -281,7 +291,9 @@ pub mod governor {
         #[ink(message)]
         pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
             self.require_token(Self::env().caller())?;
-            let proposal = Proposal::token_mint(recipient, description);
+            
+            let now = self.env().block_timestamp();
+            let proposal = Proposal::token_mint(recipient, description, now + 60 * 1000);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -293,7 +305,9 @@ pub mod governor {
         #[ink(message)]
         pub fn propose_burn(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
             self.require_token(Self::env().caller())?;
-            let proposal = Proposal::token_burn(recipient, description);
+
+            let now = self.env().block_timestamp();
+            let proposal = Proposal::token_burn(recipient, description, now + 60 * 1000);
 
             let id = self.next_proposal_id();
             self.proposals.insert(id, &proposal);
@@ -310,6 +324,11 @@ pub mod governor {
             let proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
             if proposal.executed {
                 return Err(GovernorError::ProposalAlreadyExecuted);
+            }
+
+            let now = self.env().block_timestamp();
+            if now > proposal.vote_end {
+                return Err(GovernorError::VotePeriodEnded);
             }
 
             if self.votes.get(&(proposal_id, caller)).is_some() {
@@ -558,6 +577,7 @@ pub mod governor {
                     kind: ProposalDatabaseKind::Add,
                     item: "test".to_string(),
                 },
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -590,6 +610,7 @@ pub mod governor {
                     kind: ProposalDatabaseKind::Add,
                     item: "test".to_string(),
                 },
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -617,6 +638,7 @@ pub mod governor {
                     kind: ProposalDatabaseKind::Modify(0),
                     item: "test".to_string(),
                 },
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -649,6 +671,7 @@ pub mod governor {
                     kind: ProposalDatabaseKind::Modify(0),
                     item: "test".to_string(),
                 },
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -674,6 +697,7 @@ pub mod governor {
                 category: ProposalCategory::Token(
                     ProposalTokenKind::Mint(alice),
                 ),
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
@@ -689,6 +713,7 @@ pub mod governor {
                 category: ProposalCategory::Token(
                     ProposalTokenKind::Burn(alice),
                 ),
+                vote_end: 60 * 1000,
                 executed: false,
                 description: "test desc".to_string(),
             }));
