@@ -9,7 +9,7 @@ pub mod token {
     use openbrush::{
         contracts::{
             ownable::*,
-            psp34::extensions::burnable::*,
+            psp34::extensions::enumerable::*,
         },
         modifiers,
         traits::Storage,
@@ -21,12 +21,12 @@ pub mod token {
         #[storage_field]
         ownable: ownable::Data,
         #[storage_field]
-        psp34: psp34::Data,
+        psp34: psp34::Data<enumerable::Balances>,
         next_id: u8,
     }
 
     impl PSP34 for TokenContract {}
-    impl PSP34Burnable for TokenContract {}
+    impl PSP34Enumerable for TokenContract {}
 
     impl TokenContract {
         #[ink(constructor)]
@@ -46,6 +46,17 @@ pub mod token {
             let id = self.next_id();
             self._mint_to(recipient, Id::U8(id))?;
             Ok(Id::U8(id))
+        }
+        
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        pub fn burn(&mut self, recipient: AccountId) -> Result<(), PSP34Error> {
+            let token_id = self.psp34
+                .balances
+                .enumerable
+                .get_value(&Some(&recipient), &0)
+                .ok_or(PSP34Error::TokenNotExists)?;
+            self._burn_from(recipient, token_id)
         }
 
         // (For testing) Deletes the contract from the blockchain.
@@ -103,10 +114,21 @@ pub mod token {
         fn burn_works() {
             let accounts = get_default_test_accounts();
             let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
-            assert!(token.burn(accounts.alice, Id::U8(0)).is_ok(), "Expected to burn");
+            assert!(token.burn(accounts.alice).is_ok(), "Expected to burn");
             assert_eq!(token.total_supply(), 1);
             assert_eq!(token.balance_of(accounts.alice), 0);
-        }    
+        }
+        
+        #[ink::test]
+        fn burn_nonowner_fails() {
+            let accounts = get_default_test_accounts();
+            set_caller(accounts.alice);
+
+            let mut token = TokenContract::new(vec![accounts.alice, accounts.bob]);
+            
+            set_caller(accounts.bob);
+            assert!(token.burn(accounts.frank).is_err(), "Bob expected to have no call access");
+        }
 
         fn get_default_test_accounts() -> DefaultAccounts<ink_env::DefaultEnvironment> {
             default_accounts::<ink_env::DefaultEnvironment>()
