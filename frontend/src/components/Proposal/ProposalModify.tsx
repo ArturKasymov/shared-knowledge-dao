@@ -35,7 +35,7 @@ const ProposalModify = ({
   isExecuted,
   displayDetails,
 }: ProposalModifyProps): JSX.Element => (
-  <ProposalTemplate action="M" isExecuted={isExecuted}>
+  <ProposalTemplate action={`M${itemId}`} isExecuted={isExecuted}>
     <ProposalContent role="presentation" onClick={() => displayDetails(id)}>
       {item}
     </ProposalContent>

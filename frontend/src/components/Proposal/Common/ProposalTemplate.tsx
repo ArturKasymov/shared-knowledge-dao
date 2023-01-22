@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 const ProposalWrapper = styled.div`
   width: 100%;
-  height: max-content;
   border: 2px solid ${({ theme }) => theme.colors.night[300]};
   border-radius: 2px;
   display: flex;
@@ -20,15 +19,20 @@ const Proposal = styled.div`
   flex-direction: row;
   margin: auto;
 
+  > * {
+    flex-grow: 1;
+    align-self: stretch;
+  }
+
   .id-div {
     height: 45px;
-    width: 50px;
-    position: relative;
+    width: 45px;
+    flex-grow: 0;
     margin: 12px;
     align-self: center;
-    border: 2px solid transparent;
+    /*border: 2px solid transparent;
     border-color: #0ae0df;
-    border-radius: 50%;
+    border-radius: 50%;*/
     text-align: center;
     display: inline-block;
     font-size: 2rem;

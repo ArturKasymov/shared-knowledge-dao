@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import styled from 'styled-components';
 
 import PopupTemplate from 'components/PopupTemplate';
 import { Button, Label, TextArea } from 'components/Widgets';

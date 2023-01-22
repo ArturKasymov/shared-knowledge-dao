@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 import ProposalDetailsPopupTemplate from 'components/ProposalDetailsPopupTemplate';
@@ -23,7 +23,7 @@ const Wrapper = styled.div`
 
 interface ProposalMintDetailsPopupProps {
   id: number;
-  recipientAddress: string;
+  accountAddress: string;
   votes: number;
   canVote: boolean;
   canExecute: boolean;
@@ -34,7 +34,7 @@ interface ProposalMintDetailsPopupProps {
 
 const ProposalMintDetailsPopup = ({
   id,
-  recipientAddress,
+  accountAddress,
   votes,
   canVote,
   canExecute,
@@ -53,7 +53,7 @@ const ProposalMintDetailsPopup = ({
   >
     <Wrapper>
       <p>MINT TOKEN</p>
-      <AddressInput defaultValue={recipientAddress} valid disabled />
+      <AddressInput defaultValue={accountAddress} valid disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>
 );

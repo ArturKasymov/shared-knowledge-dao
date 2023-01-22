@@ -27,13 +27,23 @@ export type ProposalTokenMint = ProposalBase & {
 
 export type ProposalTokenBurn = ProposalBase & {
   kind: 'tokenBurn';
-  recipient: string;
+  holder: string;
 };
 
 export type ProposalDatabase = ProposalItemAdd | ProposalItemModify;
 export type ProposalToken = ProposalTokenMint | ProposalTokenBurn;
 
 export type Proposal = ProposalDatabase | ProposalToken;
+
+export const newAddProposal = (id: number, item: string): ProposalItemAdd => ({
+  kind: 'itemAdd',
+  id,
+  item,
+  votes: 0,
+  hasSelfVoted: false,
+  executed: false,
+  quorum: 100, // FIXME
+});
 
 export const newMintProposal = (id: number, recipient: string): ProposalTokenMint => ({
   kind: 'tokenMint',

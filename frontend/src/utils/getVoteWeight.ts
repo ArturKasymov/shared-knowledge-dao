@@ -3,7 +3,6 @@ import { ApiPromise } from '@polkadot/api';
 
 import { displayErrorToast } from 'components/NotificationToast';
 
-import { InjectedAccountWithMeta } from 'redux/slices/walletAccountsSlice';
 import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 
 import governorMetadata from '../metadata/governor_metadata.json';

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
-import type { EventRecord } from '@polkadot/types/interfaces';
 
 import HeroHeading from 'components/HeroHeading';
 import Layout from 'components/Layout';
@@ -20,12 +19,6 @@ import {
   proposeModifyItem as proposeModifyDatabaseItem,
   proposeAddItem as proposeAddDatabaseItem,
 } from 'utils/proposeDatabase';
-import {
-  isDatabaseEvent,
-  decodeDatabaseEvent,
-  ItemAddedEvent,
-  ItemModifiedEvent,
-} from 'utils/decodeDatabaseEvent';
 
 import DatabaseProposeNewItemPopup from './DatabaseProposeNewItemPopup';
 import DatabaseItemDetailsPopup from './DatabaseItemDetailsPopup';

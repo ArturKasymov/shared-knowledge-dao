@@ -117,7 +117,7 @@ export interface NavbarProps {
 
 const NavLinks = (): JSX.Element => (
   <>
-    <Link to="/tokens">Token owners</Link>
+    <Link to="/tokens">Token holders</Link>
     <Link to="/database">Database</Link>
     <Link to="/proposals">Vote</Link>
   </>

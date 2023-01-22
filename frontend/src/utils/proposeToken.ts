@@ -1,10 +1,10 @@
 import { ApiPromise } from '@polkadot/api';
 import { ContractPromise } from '@polkadot/api-contract';
 
-import { displayErrorToast, displaySuccessToast } from 'components/NotificationToast';
+import { displayErrorToast } from 'components/NotificationToast';
 
 import { InjectedAccountWithMeta } from 'redux/slices/walletAccountsSlice';
-import { ErrorToastMessages, SuccessToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
+import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 import { getInjector } from 'utils/common';
 import { handleProposalAddedEvent } from 'utils/handleEvent';
 
@@ -15,7 +15,7 @@ export const proposeMint = async (
   recipientAddress: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
-  onSuccess: (proposalId: number) => void
+  onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
   const injector = await getInjector(loggedUser);
@@ -34,7 +34,38 @@ export const proposeMint = async (
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
       if (proposalId !== null) {
-        onSuccess(proposalId);
+        onSuccess?.(proposalId);
+      }
+    })
+    .catch((error) => {
+      displayErrorToast(`${ErrorToastMessages.CUSTOM} ${error}.`);
+    });
+};
+
+export const proposeBurn = async (
+  holderAddress: string,
+  loggedUser: InjectedAccountWithMeta,
+  api: ApiPromise,
+  onSuccess?: (proposalId: number) => void
+): Promise<void> => {
+  const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
+  const injector = await getInjector(loggedUser);
+  if (!injector) {
+    return;
+  }
+
+  await contract.tx
+    .proposeBurn(
+      {
+        gasLimit: GAS_LIMIT_VALUE,
+      },
+      holderAddress,
+      '' // description
+    )
+    .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
+      const proposalId = handleProposalAddedEvent(events, status, api);
+      if (proposalId !== null) {
+        onSuccess?.(proposalId);
       }
     })
     .catch((error) => {

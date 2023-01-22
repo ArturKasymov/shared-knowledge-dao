@@ -4,6 +4,7 @@ import welcomePopupReducer from './slices/welcomePopupSlice';
 import walletAccountsReducer from './slices/walletAccountsSlice';
 import databaseItemsReducer from './slices/databaseItemsSlice';
 import proposalsReducer from './slices/proposalsSlice';
+import tokenHoldersReducer from './slices/tokenHoldersSlice';
 import { loadState, saveState } from './localStorage';
 
 const persistedState = loadState();
@@ -15,6 +16,7 @@ const store = configureStore({
     walletAccounts: walletAccountsReducer,
     databaseItems: databaseItemsReducer,
     proposals: proposalsReducer,
+    tokenHolders: tokenHoldersReducer,
   }),
 });
 
