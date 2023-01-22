@@ -7,7 +7,8 @@ import { AddressInput, Button, Label } from 'components/Widgets';
 import checkIfAddressIsValid from 'utils/checkIfAddressIsValid';
 
 const AddressInputWrapper = styled.div`
-  width: 480px;
+  min-width: 480px;
+  width: 100%;
 `;
 
 interface TokenProposeMintPopupProps {

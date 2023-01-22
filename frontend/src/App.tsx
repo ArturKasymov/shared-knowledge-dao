@@ -25,7 +25,15 @@ const App = (): JSX.Element => {
   useEffect(() => {
     const setupProvider = async () => {
       const wsProvider = new WsProvider(process.env.REACT_APP_PROVIDER_URL);
-      const wsApi = await ApiPromise.create({ provider: wsProvider, throwOnConnect: true });
+      const wsApi = await ApiPromise.create({
+        provider: wsProvider,
+        throwOnConnect: true,
+        types: {
+          VoteType: {
+            _enum: ['For', 'Against'],
+          },
+        },
+      });
 
       if (!wsApi) return;
       // eslint-disable-next-line no-console

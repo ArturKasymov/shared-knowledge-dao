@@ -5,7 +5,8 @@ import ProposalDetailsPopupTemplate from 'components/ProposalDetailsPopupTemplat
 import { AddressInput } from 'components/Widgets';
 
 const Wrapper = styled.div`
-  width: 480px;
+  min-width: 480px;
+  width: 100%;
   align-self: center;
   box-sizing: border-box;
 
@@ -25,10 +26,11 @@ interface ProposalMintDetailsPopupProps {
   id: number;
   accountAddress: string;
   votes: number;
+  voteDeadline: Date;
   canVote: boolean;
   canExecute: boolean;
   onPopupClose: () => void;
-  onVote: (id: number) => void;
+  onVote: (id: number, isFor: boolean) => void;
   onExecute: (id: number) => void;
 }
 
@@ -36,6 +38,7 @@ const ProposalMintDetailsPopup = ({
   id,
   accountAddress,
   votes,
+  voteDeadline,
   canVote,
   canExecute,
   onPopupClose,
@@ -45,6 +48,7 @@ const ProposalMintDetailsPopup = ({
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
+    voteDeadline={voteDeadline}
     canVote={canVote}
     canExecute={canExecute}
     onPopupClose={onPopupClose}

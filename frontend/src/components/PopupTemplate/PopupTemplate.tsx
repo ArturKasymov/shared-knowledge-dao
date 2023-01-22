@@ -5,9 +5,10 @@ import { useOutsideClickCallback } from 'utils/useOutsideClickCallback';
 
 const Wrapper = styled.div`
   width: 100%;
-  height: 100%;
+  height: 100vh;
   top: 0;
-  position: absolute;
+  left: 0;
+  position: fixed;
   color: ${({ theme }) => theme.colors.white};
   background-color: ${({ theme }) => theme.colors.backgroundDimmed};
   z-index: 3000;
@@ -27,6 +28,7 @@ const Wrapper = styled.div`
   .popup-bottom {
     height: 25px;
     padding: 20px;
+    gap: 16px;
     background-color: ${({ theme }) => theme.colors.night[300]};
     display: flex;
     align-items: center;
