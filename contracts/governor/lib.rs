@@ -43,7 +43,6 @@ pub mod governor {
         TokenOwnershipRequired,
         InsufficientTransferQuota,
         TokenError(PSP34Error),
-        // this can't happen in practice
         DatabaseError(DatabaseError),
         InkEnvError(String),
     }
@@ -679,7 +678,7 @@ pub mod governor {
         #[ink::test]
         fn propose_burn_works() {
             let alice = get_default_test_accounts().alice;
-            let mut governor = GovernorContract::test(75);
+            let mut governor = GovernorContract::test(75, 100);
             assert_eq!(governor.propose_burn(alice, "test desc".to_string()), Ok(0));
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
