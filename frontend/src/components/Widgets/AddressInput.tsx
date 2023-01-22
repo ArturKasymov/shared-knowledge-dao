@@ -28,12 +28,12 @@ interface AddressInputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const AddressInput = ({ valid, onInputChange, ...props }: AddressInputProps): JSX.Element => (
   <AddressInputWrapper
-    type='text'
-    placeholder='Account address...'
-    className={(valid === undefined || valid) ? '' : 'invalid'}
+    type="text"
+    placeholder="Account address..."
+    className={valid === undefined || valid ? '' : 'invalid'}
     onInput={(e) => onInputChange && onInputChange((e.target as HTMLInputElement).value)}
     {...props}
-   />
+  />
 );
 
 export default AddressInput;

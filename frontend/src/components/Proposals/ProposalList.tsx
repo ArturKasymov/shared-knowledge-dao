@@ -24,7 +24,11 @@ import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
-import { isQuorumReached, isDatabaseProposal, Proposal as ProposalModel } from 'utils/model/proposal';
+import {
+  isQuorumReached,
+  isDatabaseProposal,
+  Proposal as ProposalModel,
+} from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
 import { proposeAddItem as proposeAddDatabaseItem } from 'utils/proposeDatabase';
@@ -64,7 +68,9 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   const [proposals, setProposals] = useState<ProposalModel[]>([]);
   const dispatch = useDispatch();
   const loggedAccount = useSelector((state: RootState) => state.walletAccounts.account);
-  const testProposals = useSelector((state: RootState) => state.proposals.proposals).filter(isDatabaseProposal);
+  const testProposals = useSelector((state: RootState) => state.proposals.proposals).filter(
+    isDatabaseProposal
+  );
   const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
   const [showExecutedProposals, setShowExecutedProposals] = useState(false);
   const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalModel | null>(null);

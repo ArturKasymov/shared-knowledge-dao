@@ -40,17 +40,17 @@ const getRawProposal = async (
       const dbCategory = category.asDatabase;
       const item = dbCategory.get('item').toString();
 
+      const rProposal = { id, item, executed };
+
       if (dbCategory.kind.isAdd) {
-        return { kind: 'itemAdd', id, item, executed };
+        return { kind: 'itemAdd', ...rProposal };
       }
       if (dbCategory.kind.isModify) {
         const itemId = dbCategory.kind.asModify.toNumber();
         return {
           kind: 'itemModify',
-          id,
           itemId,
-          item,
-          executed,
+          ...rProposal,
         };
       }
     }
@@ -59,12 +59,15 @@ const getRawProposal = async (
       const tkCategory = category.asToken;
       const recipient = tkCategory.get('recipient').toString();
 
-      return {
-        kind: 'tokenMint',
-        id,
-        recipient,
-        executed,
-      };
+      const rProposal = { id, recipient, executed };
+
+      if (tkCategory.kind.isMint) {
+        return { kind: 'tokenMint', ...rProposal };
+      }
+
+      if (tkCategory.kind.isBurn) {
+        return { kind: 'tokenBurn', ...rProposal };
+      }
     }
 
     return null;
