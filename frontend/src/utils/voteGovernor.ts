@@ -43,7 +43,8 @@ export const voteForProposal = async (
       {
         gasLimit: GAS_LIMIT_VALUE,
       },
-      id
+      id,
+      api.createType('VoteType', 'For'),
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) =>
       handleVoteCastedEvent(events, status, api)

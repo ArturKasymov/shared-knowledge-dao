@@ -35,12 +35,13 @@ const getRawProposal = async (
     const proposal = response.unwrap();
     const executed = proposal.get('executed').valueOf();
     const category = proposal.get('category');
+    const voteEnd = proposal.get('voteEnd').toPrimitive() as number;
 
     if (category.isDatabase) {
       const dbCategory = category.asDatabase;
       const item = dbCategory.get('item').toString();
 
-      const rProposal = { id, item, executed };
+      const rProposal = { id, item, voteEnd, executed };
 
       if (dbCategory.kind.isAdd) {
         return { kind: 'itemAdd', ...rProposal };
@@ -57,7 +58,7 @@ const getRawProposal = async (
 
     if (category.isToken) {
       const tkKind = category.asToken;
-      const rProposal = { id, executed };
+      const rProposal = { id, voteEnd, executed };
 
       if (tkKind.isMint) {
         const recipient = tkKind.asMint.toString();

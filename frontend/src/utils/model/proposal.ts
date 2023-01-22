@@ -1,10 +1,13 @@
 type ProposalKind = 'itemAdd' | 'itemModify' | 'tokenMint' | 'tokenBurn';
 
+type Timestamp = number;
+
 interface ProposalBase {
   kind: ProposalKind;
   id: number;
   votes: number;
   hasSelfVoted: boolean;
+  voteEnd: Timestamp;
   executed: boolean;
   quorum: number;
 }
@@ -41,6 +44,7 @@ export const newAddProposal = (id: number, item: string): ProposalItemAdd => ({
   item,
   votes: 0,
   hasSelfVoted: false,
+  voteEnd: new Date(new Date().getTime() + 1).getTime(), // FIXME
   executed: false,
   quorum: 100, // FIXME
 });
@@ -51,6 +55,7 @@ export const newMintProposal = (id: number, recipient: string): ProposalTokenMin
   recipient,
   votes: 0,
   hasSelfVoted: false,
+  voteEnd: new Date(new Date().getTime() + 1).getTime(), // FIXME
   executed: false,
   quorum: 100, // FIXME
 });

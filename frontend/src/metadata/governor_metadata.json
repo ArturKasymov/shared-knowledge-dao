@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xd37ba7dec2db4889b2ca2b2259b4d195e5b5fa17303a0b4a535ec7cfdfe3627c",
+    "hash": "0xeb8baca1416c110a831c5204197cc43eeffb9334d9b0036462f066036c2f37fe",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -31,7 +31,7 @@
                 "displayName": [
                   "Vec"
                 ],
-                "type": 18
+                "type": 21
               }
             },
             {
@@ -49,7 +49,7 @@
                 "displayName": [
                   "u128"
                 ],
-                "type": 17
+                "type": 20
               }
             },
             {
@@ -58,7 +58,7 @@
                 "displayName": [
                   "Hash"
                 ],
-                "type": 19
+                "type": 22
               }
             },
             {
@@ -67,7 +67,7 @@
                 "displayName": [
                   "Hash"
                 ],
-                "type": 19
+                "type": 22
               }
             }
           ],
@@ -93,7 +93,7 @@
                 "displayName": [
                   "u128"
                 ],
-                "type": 17
+                "type": 20
               }
             }
           ],
@@ -198,7 +198,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0x2a99c591"
         },
@@ -231,7 +231,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0xa2a9f2b1"
         },
@@ -273,7 +273,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0xbfe2e424"
         },
@@ -315,7 +315,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0x7c8b3bea"
         },
@@ -348,14 +348,14 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0x0a5ec08b"
         },
         {
           "args": [
             {
-              "label": "recipient",
+              "label": "holder",
               "type": {
                 "displayName": [
                   "AccountId"
@@ -381,7 +381,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 20
+            "type": 23
           },
           "selector": "0xbf4a7db6"
         },
@@ -395,6 +395,15 @@
                 ],
                 "type": 1
               }
+            },
+            {
+              "label": "vote",
+              "type": {
+                "displayName": [
+                  "VoteType"
+                ],
+                "type": 29
+              }
             }
           ],
           "docs": [],
@@ -405,7 +414,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 26
+            "type": 30
           },
           "selector": "0x083be260"
         },
@@ -429,7 +438,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 27
+            "type": 31
           },
           "selector": "0xd00ec894"
         },
@@ -453,7 +462,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 29
+            "type": 33
           },
           "selector": "0x5c417b0c"
         },
@@ -477,7 +486,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 30
+            "type": 34
           },
           "selector": "0xba4dc5ec"
         },
@@ -510,7 +519,7 @@
             "displayName": [
               "bool"
             ],
-            "type": 13
+            "type": 14
           },
           "selector": "0xb03e31b0"
         },
@@ -538,7 +547,7 @@
             "displayName": [
               "u128"
             ],
-            "type": 17
+            "type": 20
           },
           "selector": "0x561f4ed5"
         },
@@ -552,7 +561,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 31
+            "type": 35
           },
           "selector": "0xb6d7113d"
         },
@@ -566,7 +575,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 31
+            "type": 35
           },
           "selector": "0x14d608f2"
         },
@@ -644,7 +653,7 @@
             "layout": {
               "cell": {
                 "key": "0x0200000000000000000000000000000000000000000000000000000000000000",
-                "ty": 14
+                "ty": 15
               }
             },
             "name": "votes"
@@ -653,6 +662,24 @@
             "layout": {
               "cell": {
                 "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
+                "ty": 18
+              }
+            },
+            "name": "database_proposals"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                "ty": 19
+              }
+            },
+            "name": "token_proposals"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
                 "ty": 1
               }
             },
@@ -661,7 +688,7 @@
           {
             "layout": {
               "cell": {
-                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                "key": "0x0600000000000000000000000000000000000000000000000000000000000000",
                 "ty": 3
               }
             },
@@ -670,8 +697,8 @@
           {
             "layout": {
               "cell": {
-                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
-                "ty": 17
+                "key": "0x0700000000000000000000000000000000000000000000000000000000000000",
+                "ty": 20
               }
             },
             "name": "proposal_price"
@@ -679,14 +706,14 @@
           {
             "layout": {
               "enum": {
-                "dispatchKey": "0x0600000000000000000000000000000000000000000000000000000000000000",
+                "dispatchKey": "0x0800000000000000000000000000000000000000000000000000000000000000",
                 "variants": {
                   "0": {
                     "fields": [
                       {
                         "layout": {
                           "cell": {
-                            "key": "0x0700000000000000000000000000000000000000000000000000000000000000",
+                            "key": "0x0900000000000000000000000000000000000000000000000000000000000000",
                             "ty": 10
                           }
                         },
@@ -705,14 +732,14 @@
           {
             "layout": {
               "enum": {
-                "dispatchKey": "0x0700000000000000000000000000000000000000000000000000000000000000",
+                "dispatchKey": "0x0900000000000000000000000000000000000000000000000000000000000000",
                 "variants": {
                   "0": {
                     "fields": [
                       {
                         "layout": {
                           "cell": {
-                            "key": "0x0800000000000000000000000000000000000000000000000000000000000000",
+                            "key": "0x0a00000000000000000000000000000000000000000000000000000000000000",
                             "ty": 10
                           }
                         },
@@ -780,6 +807,11 @@
               "fields": [
                 {
                   "name": "for_votes",
+                  "type": 3,
+                  "typeName": "Percentage"
+                },
+                {
+                  "name": "against_votes",
                   "type": 3,
                   "typeName": "Percentage"
                 }
@@ -875,8 +907,13 @@
                   "typeName": "ProposalCategory"
                 },
                 {
-                  "name": "executed",
+                  "name": "vote_end",
                   "type": 13,
+                  "typeName": "Timestamp"
+                },
+                {
+                  "name": "executed",
+                  "type": 14,
                   "typeName": "bool"
                 },
                 {
@@ -1034,12 +1071,20 @@
         "id": 13,
         "type": {
           "def": {
-            "primitive": "bool"
+            "primitive": "u64"
           }
         }
       },
       {
         "id": 14,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
+        }
+      },
+      {
+        "id": 15,
         "type": {
           "def": {
             "composite": {
@@ -1055,11 +1100,11 @@
           "params": [
             {
               "name": "K",
-              "type": 15
+              "type": 16
             },
             {
               "name": "V",
-              "type": 16
+              "type": 17
             }
           ],
           "path": [
@@ -1071,7 +1116,7 @@
         }
       },
       {
-        "id": 15,
+        "id": 16,
         "type": {
           "def": {
             "tuple": [
@@ -1082,7 +1127,7 @@
         }
       },
       {
-        "id": 16,
+        "id": 17,
         "type": {
           "def": {
             "tuple": []
@@ -1090,7 +1135,71 @@
         }
       },
       {
-        "id": 17,
+        "id": 18,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 4,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 1
+            },
+            {
+              "name": "V",
+              "type": 1
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 19,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 4,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 10
+            },
+            {
+              "name": "V",
+              "type": 1
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 20,
         "type": {
           "def": {
             "primitive": "u128"
@@ -1098,7 +1207,7 @@
         }
       },
       {
-        "id": 18,
+        "id": 21,
         "type": {
           "def": {
             "sequence": {
@@ -1108,7 +1217,7 @@
         }
       },
       {
-        "id": 19,
+        "id": 22,
         "type": {
           "def": {
             "composite": {
@@ -1128,7 +1237,7 @@
         }
       },
       {
-        "id": 20,
+        "id": 23,
         "type": {
           "def": {
             "variant": {
@@ -1145,7 +1254,7 @@
                 {
                   "fields": [
                     {
-                      "type": 21
+                      "type": 24
                     }
                   ],
                   "index": 1,
@@ -1161,7 +1270,7 @@
             },
             {
               "name": "E",
-              "type": 21
+              "type": 24
             }
           ],
           "path": [
@@ -1170,7 +1279,7 @@
         }
       },
       {
-        "id": 21,
+        "id": 24,
         "type": {
           "def": {
             "variant": {
@@ -1184,39 +1293,63 @@
                   "name": "ProposalAlreadyExecuted"
                 },
                 {
+                  "fields": [
+                    {
+                      "type": 1,
+                      "typeName": "ProposalId"
+                    }
+                  ],
                   "index": 2,
-                  "name": "AlreadyVoted"
+                  "name": "ActiveProposalForItemExists"
                 },
                 {
+                  "fields": [
+                    {
+                      "type": 1,
+                      "typeName": "ProposalId"
+                    }
+                  ],
                   "index": 3,
-                  "name": "QuorumNotReached"
+                  "name": "ActiveProposalForAccountExists"
                 },
                 {
                   "index": 4,
-                  "name": "TokenOwnershipRequired"
+                  "name": "AlreadyVoted"
                 },
                 {
                   "index": 5,
+                  "name": "QuorumNotReached"
+                },
+                {
+                  "index": 6,
+                  "name": "VotePeriodEnded"
+                },
+                {
+                  "index": 7,
+                  "name": "TokenOwnershipRequired"
+                },
+                {
+                  "index": 8,
                   "name": "InsufficientTransferQuota"
                 },
                 {
                   "fields": [
                     {
-                      "type": 22,
+                      "type": 25,
                       "typeName": "PSP34Error"
                     }
                   ],
-                  "index": 6,
+                  "index": 9,
                   "name": "TokenError"
                 },
                 {
                   "fields": [
                     {
-                      "type": 24,
+                      "type": 27,
                       "typeName": "DatabaseError"
                     }
                   ],
-                  "index": 7,
+                  "index": 10,
                   "name": "DatabaseError"
                 },
                 {
@@ -1226,7 +1359,7 @@
                       "typeName": "String"
                     }
                   ],
-                  "index": 8,
+                  "index": 11,
                   "name": "InkEnvError"
                 }
               ]
@@ -1240,7 +1373,7 @@
         }
       },
       {
-        "id": 22,
+        "id": 25,
         "type": {
           "def": {
             "variant": {
@@ -1248,7 +1381,7 @@
                 {
                   "fields": [
                     {
-                      "type": 23,
+                      "type": 26,
                       "typeName": "String"
                     }
                   ],
@@ -1274,7 +1407,7 @@
                 {
                   "fields": [
                     {
-                      "type": 23,
+                      "type": 26,
                       "typeName": "String"
                     }
                   ],
@@ -1294,7 +1427,7 @@
         }
       },
       {
-        "id": 23,
+        "id": 26,
         "type": {
           "def": {
             "sequence": {
@@ -1304,7 +1437,7 @@
         }
       },
       {
-        "id": 24,
+        "id": 27,
         "type": {
           "def": {
             "variant": {
@@ -1316,7 +1449,7 @@
                 {
                   "fields": [
                     {
-                      "type": 25,
+                      "type": 28,
                       "typeName": "OwnableError"
                     }
                   ],
@@ -1334,7 +1467,7 @@
         }
       },
       {
-        "id": 25,
+        "id": 28,
         "type": {
           "def": {
             "variant": {
@@ -1360,7 +1493,31 @@
         }
       },
       {
-        "id": 26,
+        "id": 29,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "For"
+                },
+                {
+                  "index": 1,
+                  "name": "Against"
+                }
+              ]
+            }
+          },
+          "path": [
+            "governor",
+            "governor",
+            "VoteType"
+          ]
+        }
+      },
+      {
+        "id": 30,
         "type": {
           "def": {
             "variant": {
@@ -1368,7 +1525,7 @@
                 {
                   "fields": [
                     {
-                      "type": 16
+                      "type": 17
                     }
                   ],
                   "index": 0,
@@ -1377,7 +1534,7 @@
                 {
                   "fields": [
                     {
-                      "type": 21
+                      "type": 24
                     }
                   ],
                   "index": 1,
@@ -1389,11 +1546,11 @@
           "params": [
             {
               "name": "T",
-              "type": 16
+              "type": 17
             },
             {
               "name": "E",
-              "type": 21
+              "type": 24
             }
           ],
           "path": [
@@ -1402,7 +1559,7 @@
         }
       },
       {
-        "id": 27,
+        "id": 31,
         "type": {
           "def": {
             "variant": {
@@ -1410,7 +1567,7 @@
                 {
                   "fields": [
                     {
-                      "type": 28
+                      "type": 32
                     }
                   ],
                   "index": 0,
@@ -1419,7 +1576,7 @@
                 {
                   "fields": [
                     {
-                      "type": 21
+                      "type": 24
                     }
                   ],
                   "index": 1,
@@ -1431,11 +1588,11 @@
           "params": [
             {
               "name": "T",
-              "type": 28
+              "type": 32
             },
             {
               "name": "E",
-              "type": 21
+              "type": 24
             }
           ],
           "path": [
@@ -1444,7 +1601,7 @@
         }
       },
       {
-        "id": 28,
+        "id": 32,
         "type": {
           "def": {
             "variant": {
@@ -1477,7 +1634,7 @@
         }
       },
       {
-        "id": 29,
+        "id": 33,
         "type": {
           "def": {
             "variant": {
@@ -1510,7 +1667,7 @@
         }
       },
       {
-        "id": 30,
+        "id": 34,
         "type": {
           "def": {
             "variant": {
@@ -1543,7 +1700,7 @@
         }
       },
       {
-        "id": 31,
+        "id": 35,
         "type": {
           "def": {
             "variant": {
