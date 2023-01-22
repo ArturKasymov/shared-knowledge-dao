@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 
@@ -10,7 +10,6 @@ import {
   disconnectWallet,
   updateAllAccounts,
 } from 'redux/slices/walletAccountsSlice';
-import { RootState } from 'redux/store';
 import getWalletAddressShort from 'utils/getWalletAddressShort';
 import { queries } from 'shared/layout';
 import { ReactComponent as WalletIcon } from 'assets/WalletIcon.svg';

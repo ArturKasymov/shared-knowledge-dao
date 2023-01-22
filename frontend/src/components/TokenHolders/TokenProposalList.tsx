@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
-import type { EventRecord } from '@polkadot/types/interfaces';
 
 import { ProposalToken } from 'components/Proposal';
 import { displayErrorToast } from 'components/NotificationToast';
@@ -179,7 +178,7 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
   const proposalToPopup = (proposal: ProposalTokenModel) => {
     const canVote = !!loggedAccount && !proposal.hasSelfVoted;
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
-    const accountAddress = (proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder);
+    const accountAddress = proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder;
     return (
       <ProposalMintDetailsPopup
         id={proposal.id}

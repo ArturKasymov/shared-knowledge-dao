@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
 
-import HeroHeading from 'components/HeroHeading';
-import Layout from 'components/Layout';
 import { displayErrorToast } from 'components/NotificationToast';
 
 import { ErrorToastMessages } from 'shared/constants';
@@ -58,17 +56,21 @@ export default ({ api }: TokenHoldersProps): JSX.Element => {
   const dispatch = useDispatch();
   const loggedAccount = useSelector((state: RootState) => state.walletAccounts.account);
   const testTokenHolders = useSelector((state: RootState) => state.tokenHolders.tokenHolders);
-  const [tokenHolderDetailsDisplay, setTokenHolderDetailsDisplay] = useState<TokenHolderModel | null>(null);
+  const [tokenHolderDetailsDisplay, setTokenHolderDetailsDisplay] =
+    useState<TokenHolderModel | null>(null);
 
   const getAllTokenHolders = useCallback(async () => api && getTokenHolders(api), [api]);
-  const getTokenHolderBalance = useCallback(async (address: string) => api && getTokensBalance(address, api),
-                                            [api]);
+  const getTokenHolderBalance = useCallback(
+    async (address: string) => api && getTokensBalance(address, api),
+    [api]
+  );
 
   useEffect(() => {
     (async () => {
       const addresses = await getAllTokenHolders();
       const allTokenHolders = addresses?.map(async (address) => ({
-        address, balance: await getTokenHolderBalance(address)
+        address,
+        balance: await getTokenHolderBalance(address),
       }));
       if (allTokenHolders) {
         Promise.all(allTokenHolders).then(
@@ -89,16 +91,21 @@ export default ({ api }: TokenHoldersProps): JSX.Element => {
     }
 
     if (api) {
-      proposeBurnToken(holderAddress, loggedAccount, api).then(() => setTokenHolderDetailsDisplay(null));
+      proposeBurnToken(holderAddress, loggedAccount, api).then(() =>
+        setTokenHolderDetailsDisplay(null)
+      );
     }
   };
 
-  const displayTokenHolderDetails = useCallback((address: string) => {
-    const holderToBeDisplayed = tokenHolders.find((holder) => holder.address === address);
-    if (holderToBeDisplayed) {
-      setTokenHolderDetailsDisplay(holderToBeDisplayed);
-    }
-  }, [tokenHolders]);
+  const displayTokenHolderDetails = useCallback(
+    (address: string) => {
+      const holderToBeDisplayed = tokenHolders.find((holder) => holder.address === address);
+      if (holderToBeDisplayed) {
+        setTokenHolderDetailsDisplay(holderToBeDisplayed);
+      }
+    },
+    [tokenHolders]
+  );
 
   return (
     <Wrapper>

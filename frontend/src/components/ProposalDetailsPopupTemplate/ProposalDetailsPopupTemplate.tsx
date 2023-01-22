@@ -1,5 +1,4 @@
-import React, { useRef } from 'react';
-import styled from 'styled-components';
+import React from 'react';
 
 import PopupTemplate from 'components/PopupTemplate';
 import { Button, Label } from 'components/Widgets';

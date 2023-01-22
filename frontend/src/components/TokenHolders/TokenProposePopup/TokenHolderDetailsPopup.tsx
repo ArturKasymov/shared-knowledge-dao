@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 import PopupTemplate from 'components/PopupTemplate';
@@ -15,31 +15,28 @@ interface TokenHolderDetailsPopupProps {
   onProposeBurn: (address: string) => void;
 }
 
+// TODO: maybe disable propose button when wallet not connected?
 export default ({
   address,
   balance,
   onPopupClose,
   onProposeBurn,
-}: TokenHolderDetailsPopupProps): JSX.Element => {
-  console.log('Hack');
-  // TODO: maybe disable propose button when wallet not connected?
-  return (
-    <PopupTemplate
-      leftBottom={
-        <Label>
-          <span>BALANCE:</span> {balance}
-        </Label>
-      }
-      buttons={
-        <Button type="button" onClick={() => onProposeBurn(address)}>
-          Propose burn
-        </Button>
-      }
-      onPopupClose={onPopupClose}
-    >
-      <AddressInputWrapper>
-        <AddressInput disabled value={address} valid />
-      </AddressInputWrapper>
-    </PopupTemplate>
-  );
-};
+}: TokenHolderDetailsPopupProps): JSX.Element => (
+  <PopupTemplate
+    leftBottom={
+      <Label>
+        <span>BALANCE:</span> {balance}
+      </Label>
+    }
+    buttons={
+      <Button type="button" onClick={() => onProposeBurn(address)}>
+        Propose burn
+      </Button>
+    }
+    onPopupClose={onPopupClose}
+  >
+    <AddressInputWrapper>
+      <AddressInput disabled value={address} valid />
+    </AddressInputWrapper>
+  </PopupTemplate>
+);

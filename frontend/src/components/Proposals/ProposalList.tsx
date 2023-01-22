@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { ApiPromise } from '@polkadot/api';
-import type { EventRecord } from '@polkadot/types/interfaces';
 
 import HeroHeading from 'components/HeroHeading';
 import Layout from 'components/Layout';
@@ -30,6 +29,7 @@ import {
   isDatabaseProposal,
   newAddProposal,
   Proposal as ProposalModel,
+  ProposalDatabase as ProposalDatabaseModel,
 } from 'utils/model/proposal';
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
@@ -75,7 +75,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   );
   const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
   const [showExecutedProposals, setShowExecutedProposals] = useState(false);
-  const [proposalDetailsDisplay, setProposalDetailsDisplay] = useState<ProposalModel | null>(null);
+  const [proposalDetailsDisplay, setProposalDetailsDisplay] =
+    useState<ProposalDatabaseModel | null>(null);
   const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
   const getAllProposalsIds = useCallback(async () => api && getProposalsIds(api), [api]);
   const getProposalById = useCallback(
@@ -158,7 +159,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     setProposalDetailsDisplay(proposalToBeDisplayed);
   };
 
-  const proposalToReactNode = (proposal: ProposalModel) => {
+  const proposalToReactNode = (proposal: ProposalDatabaseModel) => {
     switch (proposal.kind) {
       case 'itemAdd':
         return (
@@ -184,7 +185,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  const proposalToPopup = (proposal: ProposalModel) => {
+  const proposalToPopup = (proposal: ProposalDatabaseModel) => {
     const canVote = !!loggedAccount && !proposal.hasSelfVoted;
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
     switch (proposal.kind) {

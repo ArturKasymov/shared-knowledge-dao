@@ -1,10 +1,10 @@
 import { ApiPromise } from '@polkadot/api';
 import { ContractPromise } from '@polkadot/api-contract';
 
-import { displayErrorToast, displaySuccessToast } from 'components/NotificationToast';
+import { displayErrorToast } from 'components/NotificationToast';
 
 import { InjectedAccountWithMeta } from 'redux/slices/walletAccountsSlice';
-import { ErrorToastMessages, SuccessToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
+import { ErrorToastMessages, GAS_LIMIT_VALUE } from 'shared/constants';
 import { getInjector } from 'utils/common';
 import { handleProposalAddedEvent } from 'utils/handleEvent';
 
