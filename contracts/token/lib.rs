@@ -50,13 +50,13 @@ pub mod token {
         
         #[ink(message)]
         #[modifiers(only_owner)]
-        pub fn burn(&mut self, recipient: AccountId) -> Result<(), PSP34Error> {
+        pub fn burn(&mut self, owner: AccountId) -> Result<(), PSP34Error> {
             let token_id = self.psp34
                 .balances
                 .enumerable
-                .get_value(&Some(&recipient), &0)
+                .get_value(&Some(&owner), &0)
                 .ok_or(PSP34Error::TokenNotExists)?;
-            self._burn_from(recipient, token_id)
+            self._burn_from(owner, token_id)
         }
 
         // (For testing) Deletes the contract from the blockchain.
