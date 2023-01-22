@@ -376,9 +376,10 @@ pub mod governor {
                             ::contract_from_account_id::<TokenContractRef>(token_contract);
                         match kind {
                             ProposalTokenKind::Mint =>
-                                Ok(token.mint(*recipient)?),
+                                _ = token.mint(*recipient)?,
                             ProposalTokenKind::Burn =>
-                                Ok(token.burn(*recipient)?),
+                                token.burn(*recipient)?,
+                        }
                     }
                 },
                 ProposalCategory::Database { kind, item } => {
@@ -549,6 +550,23 @@ pub mod governor {
             assert_eq!(governor.next_proposal_id, 1);
             assert_eq!(governor.get_proposal(0), Some(Proposal {
                 category: ProposalCategory::Token {
+                    kind: ProposalTokenKind::Mint,
+                    recipient: alice,
+                },
+                executed: false,
+                description: "test desc".to_string(),
+            }));
+        }
+
+        #[ink::test]
+        fn propose_burn_works() {
+            let alice = get_default_test_accounts().alice;
+            let mut governor = GovernorContract::test(75);
+            assert_eq!(governor.propose_burn(alice, "test desc".to_string()), Ok(0));
+            assert_eq!(governor.next_proposal_id, 1);
+            assert_eq!(governor.get_proposal(0), Some(Proposal {
+                category: ProposalCategory::Token {
+                    kind: ProposalTokenKind::Burn,
                     recipient: alice,
                 },
                 executed: false,
