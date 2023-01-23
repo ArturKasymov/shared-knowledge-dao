@@ -26,6 +26,8 @@ cd contracts/token && cargo test
 
 ### Deploy
 
+First, include your account address in initial token gaveaway (file `scripts/deploy.sh`, line `72`, array with addresses).
+
 ```bash
 ./scripts/deploy.sh "<12-word seed of your polkadot account>"
 ```
