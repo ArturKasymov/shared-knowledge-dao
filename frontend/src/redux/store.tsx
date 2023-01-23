@@ -1,6 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 
-import welcomePopupReducer from './slices/welcomePopupSlice';
 import walletAccountsReducer from './slices/walletAccountsSlice';
 import databaseItemsReducer from './slices/databaseItemsSlice';
 import proposalsReducer from './slices/proposalsSlice';
@@ -12,7 +11,6 @@ const persistedState = loadState();
 const store = configureStore({
   preloadedState: persistedState,
   reducer: combineReducers({
-    welcomePopup: welcomePopupReducer,
     walletAccounts: walletAccountsReducer,
     databaseItems: databaseItemsReducer,
     proposals: proposalsReducer,

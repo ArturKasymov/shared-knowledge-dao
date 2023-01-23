@@ -8,7 +8,6 @@ import { ApiPromise } from '@polkadot/api';
 import Navbar from 'components/Navbar';
 import Footer from 'components/Footer';
 import NotificationToast from 'components/NotificationToast';
-import WelcomePopup from 'components/WelcomePopup';
 import AccountSelector from 'components/Wallet/AccountSelector';
 
 import { queries } from 'shared/layout';
@@ -59,9 +58,6 @@ const Layout = ({ api, children }: LayoutProps) => {
   const [isAccountsModalVisible, setIsAccountsModalVisible] = useState(false);
 
   const dispatch = useDispatch();
-  const isWelcomePopupVisible = useSelector(
-    (state: RootState) => state.welcomePopup.isWelcomePopupVisible
-  );
   const { allAccounts, account: loggedAccount } = useSelector(
     (state: RootState) => state.walletAccounts
   );
@@ -94,7 +90,6 @@ const Layout = ({ api, children }: LayoutProps) => {
       {children}
       <NotificationToast />
       <Footer />
-      {isWelcomePopupVisible && <WelcomePopup />}
       {isAccountsModalVisible && (
         <AccountSelector
           accounts={allAccounts}
