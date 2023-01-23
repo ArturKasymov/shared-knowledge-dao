@@ -13,6 +13,7 @@ import PlaceholderProposal from 'components/Proposal/Placeholder';
 
 import { ErrorToastMessages, MIN_PROPOSAL_PRICE } from 'shared/constants';
 import { RootState } from 'redux/store';
+import { setAllTokenHolders } from 'redux/slices/tokenHoldersSlice';
 import {
   setAllProposals,
   setSelfVoteWeight,
@@ -24,6 +25,8 @@ import { queries } from 'shared/layout';
 import { getProposalsIds } from 'utils/getProposalsIds';
 import { getProposal } from 'utils/getProposal';
 import { getVoteWeight } from 'utils/getVoteWeight';
+import { getTokenHolders } from 'utils/getToken';
+import { getTokensBalance } from 'utils/getTokensBalance';
 import {
   isQuorumReached,
   isActive as isActiveProposal,
@@ -35,6 +38,7 @@ import {
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
 import { proposeAddItem as proposeAddDatabaseItem } from 'utils/proposeDatabase';
+import type { TokenHolder as TokenHolderModel } from 'utils/model';
 
 import { ProposalAddDetailsPopup, ProposalModifyDetailsPopup } from './ProposalDetailsPopup';
 import DatabaseProposeNewItemPopup from '../Database/DatabaseProposeNewItemPopup';
@@ -90,6 +94,12 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     async () => api && loggedAccount && getVoteWeight(loggedAccount.address, api),
     [loggedAccount, api]
   );
+  
+  const getAllTokenHolders = useCallback(async () => api && getTokenHolders(api), [api]);
+  const getTokenHolderBalance = useCallback(
+    async (address: string) => api && getTokensBalance(address, api),
+    [api]
+  );
 
   useEffect(() => {
     const getProposals = async () => {
@@ -100,11 +110,11 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
       }
     };
     getProposals();
-  }, [getAllProposalsIds, getProposalById]);
+  }, [getAllProposalsIds, getProposalById, dispatch]);
 
   useEffect(() => {
     dispatch(setAllProposals(proposals));
-  }, [proposals, dispatch]);
+  }, [proposals, proposals.length, dispatch]);
 
   useEffect(() => {
     (async () => {
@@ -112,6 +122,21 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
       dispatch(setSelfVoteWeight(selfVoteWeight));
     })();
   }, [getSelfVoteWeight, dispatch]);
+
+  useEffect(() => {
+    (async () => {
+      const addresses = await getAllTokenHolders();
+      const allTokenHolders = addresses?.map(async (address) => ({
+        address,
+        balance: await getTokenHolderBalance(address),
+      }));
+      if (allTokenHolders) {
+        Promise.all(allTokenHolders).then(
+          (holders) => holders && dispatch(setAllTokenHolders(holders as TokenHolderModel[]))
+        );
+      }
+    })();
+  }, [getAllTokenHolders, getTokenHolderBalance, dispatch]);
 
   const handleVote = (proposalId: number, isFor: boolean) => {
     if (!loggedAccount) {
@@ -201,8 +226,9 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
   };
 
   const proposalToPopup = (proposal: ProposalDatabaseModel) => {
-    const canVote = !!loggedAccount && !proposal.hasSelfVoted && Date.now() <= proposal.voteEnd;
-    const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
+    const isTokenHolder = tokenHolders.some((holder) => holder.address === loggedAccount?.address);
+    const canVote = !!loggedAccount && isTokenHolder && !proposal.hasSelfVoted && Date.now() <= proposal.voteEnd;
+    const canExecute = !!loggedAccount && isTokenHolder && !proposal.executed && isQuorumReached(proposal);
     switch (proposal.kind) {
       case 'itemAdd':
         return (
