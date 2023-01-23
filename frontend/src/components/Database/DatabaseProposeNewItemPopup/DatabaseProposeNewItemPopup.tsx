@@ -15,7 +15,7 @@ const Wrapper = styled.div`
 `;
 
 interface DatabaseProposeNewItemPopupProps {
-  proposalPrice: number;
+  proposalPrice?: number;
   onPopupClose: () => void;
   onItemPropose: (item: string, description: string, transferValue: number) => void;
 }
@@ -31,7 +31,7 @@ const DatabaseProposeNewItemPopup = ({
   const [transferValue, setTransferValue] = useState(0);
 
   const isSufficientValue = useCallback(
-    () => checkIfSufficientValue(transferValue, proposalPrice),
+    () => proposalPrice === undefined || checkIfSufficientValue(transferValue, proposalPrice),
     [transferValue, proposalPrice]
   );
 
@@ -50,11 +50,12 @@ const DatabaseProposeNewItemPopup = ({
             <span>NEW</span>
           </Label>
 
+          {proposalPrice !== undefined &&
           <TransferValueInput
             sufficient={isSufficientValue()}
             proposalPrice={proposalPrice}
             onInputChange={setTransferValue}
-          />
+          />}
         </Wrapper>
       }
       buttons={

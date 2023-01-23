@@ -11,14 +11,18 @@ import { displayErrorToast } from 'components/NotificationToast';
 
 import { ErrorToastMessages, MIN_PROPOSAL_PRICE } from 'shared/constants';
 import { RootState } from 'redux/store';
+import { setAllTokenHolders } from 'redux/slices/tokenHoldersSlice';
 import { setAllDatabaseItems } from 'redux/slices/databaseItemsSlice';
 import { queries } from 'shared/layout';
 import { getDatabaseItemsIds } from 'utils/getDatabaseItemsIds';
 import { getDatabaseItem, DatabaseItem as DatabaseItemModel } from 'utils/getDatabaseItem';
+import { getTokenHolders } from 'utils/getToken';
+import { getTokensBalance } from 'utils/getTokensBalance';
 import {
   proposeModifyItem as proposeModifyDatabaseItem,
   proposeAddItem as proposeAddDatabaseItem,
 } from 'utils/proposeDatabase';
+import type { TokenHolder as TokenHolderModel } from 'utils/model';
 
 import DatabaseProposeNewItemPopup from './DatabaseProposeNewItemPopup';
 import DatabaseItemDetailsPopup from './DatabaseItemDetailsPopup';
@@ -59,6 +63,12 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     async (id: number) => api && getDatabaseItem(id, api),
     [api]
   );
+  
+  const getAllTokenHolders = useCallback(async () => api && getTokenHolders(api), [api]);
+  const getTokenHolderBalance = useCallback(
+    async (address: string) => api && getTokensBalance(address, api),
+    [api]
+  );
 
   useEffect(() => {
     const getDatabaseItems = async () => {
@@ -76,6 +86,21 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
   useEffect(() => {
     dispatch(setAllDatabaseItems(databaseItems));
   }, [databaseItems, databaseItems.length, dispatch]);
+
+  useEffect(() => {
+    (async () => {
+      const addresses = await getAllTokenHolders();
+      const allTokenHolders = addresses?.map(async (address) => ({
+        address,
+        balance: await getTokenHolderBalance(address),
+      }));
+      if (allTokenHolders) {
+        Promise.all(allTokenHolders).then(
+          (holders) => holders && dispatch(setAllTokenHolders(holders as TokenHolderModel[]))
+        );
+      }
+    })();
+  }, [getAllTokenHolders, getTokenHolderBalance, dispatch]);
 
   /*
   api?.query.system.events(async (events: EventRecord[]) => {
@@ -158,19 +183,24 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     setDatabaseItemDetailsDisplay(itemToBeDisplayed);
   };
 
+  const isTokenHolder = useCallback(
+    () => !!loggedAccount && tokenHolders.some((holder) => holder.address === loggedAccount.address),
+    [loggedAccount, tokenHolders]
+  );
+
   return (
     <>
       {proposeNewItemDisplay && (
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
-          proposalPrice={MIN_PROPOSAL_PRICE}
+          proposalPrice={isTokenHolder() ? undefined : MIN_PROPOSAL_PRICE}
         />
       )}
       {databaseItemDetailsDisplay && (
         <DatabaseItemDetailsPopup
           item={databaseItemDetailsDisplay}
-          proposalPrice={100}
+          proposalPrice={isTokenHolder() ? undefined : MIN_PROPOSAL_PRICE}
           onPopupClose={() => setDatabaseItemDetailsDisplay(null)}
           onItemPropose={handleProposeModify}
         />
