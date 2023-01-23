@@ -16,6 +16,7 @@ export const proposeAddItem = async (
   description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
+  transferValue?: number,
   onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
@@ -24,14 +25,26 @@ export const proposeAddItem = async (
     return;
   }
 
-  await contract.tx
-    .proposeAddGovernor(
-      {
-        gasLimit: GAS_LIMIT_VALUE,
-      },
-      text,
-      description
-    )
+  const isHolder = transferValue === undefined;
+
+  const tx = isHolder
+    ? contract.tx.proposeAddGovernor(
+        {
+          gasLimit: GAS_LIMIT_VALUE,
+        },
+        text,
+        description
+      )
+    : contract.tx.proposeAddExternal(
+        {
+          gasLimit: GAS_LIMIT_VALUE,
+          value: transferValue!,
+        },
+        text,
+        description
+      );
+
+  await tx
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
       if (proposalId !== null) {
@@ -49,6 +62,7 @@ export const proposeModifyItem = async (
   description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
+  transferValue?: number,
   onSuccess?: (proposalId: number) => void
 ): Promise<void> => {
   const contract = new ContractPromise(api, governorMetadata, addresses.governor_address);
@@ -57,15 +71,28 @@ export const proposeModifyItem = async (
     return;
   }
 
-  await contract.tx
-    .proposeModifyGovernor(
-      {
-        gasLimit: GAS_LIMIT_VALUE,
-      },
-      id,
-      text,
-      description
-    )
+  const isHolder = transferValue === undefined;
+
+  const tx = isHolder
+    ? contract.tx.proposeModifyGovernor(
+        {
+          gasLimit: GAS_LIMIT_VALUE,
+        },
+        id,
+        text,
+        description
+      )
+    : contract.tx.proposeModifyExternal(
+        {
+          gasLimit: GAS_LIMIT_VALUE,
+          value: transferValue!,
+        },
+        id,
+        text,
+        description
+      );
+
+  await tx
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
       if (proposalId !== null) {

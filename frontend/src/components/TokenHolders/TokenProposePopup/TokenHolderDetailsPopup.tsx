@@ -34,16 +34,16 @@ export default ({
       onProposeBurn(address, textAreaDescRef.current.value);
     }
   }, [address, onProposeBurn]);
-  
+
   // TODO: maybe disable propose button when wallet not connected?
   return (
-  <PopupTemplate
-    leftBottom={
-      <Label>
-        <span>BALANCE:</span> {balance}
-      </Label>
-    }
-    buttons={
+    <PopupTemplate
+      leftBottom={
+        <Label>
+          <span>BALANCE:</span> {balance}
+        </Label>
+      }
+      buttons={
         isBeingModified ? (
           <>
             <Button type="button" className="cancel-btn" onClick={handleCancel}>
@@ -58,19 +58,18 @@ export default ({
             Burn
           </Button>
         )
-    }
-    onPopupClose={onPopupClose}
-  >
-    <AddressInputWrapper>
-      <AddressInput disabled value={address} valid />
-    </AddressInputWrapper>
-      {isBeingModified && <>
-        <hr/>
-        <TextArea
-          ref={textAreaDescRef}
-          placeholder='Description...'
-        />
-      </>}
-  </PopupTemplate>
+      }
+      onPopupClose={onPopupClose}
+    >
+      <AddressInputWrapper>
+        <AddressInput disabled value={address} valid />
+      </AddressInputWrapper>
+      {isBeingModified && (
+        <>
+          <hr />
+          <TextArea ref={textAreaDescRef} placeholder="Description..." />
+        </>
+      )}
+    </PopupTemplate>
   );
 };

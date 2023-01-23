@@ -54,8 +54,8 @@ const TokenProposeMintPopup = ({
       <AddressInputWrapper>
         <AddressInput valid={isAddressValid()} onInputChange={setAddress} />
       </AddressInputWrapper>
-      <hr/>
-      <TextArea ref={textAreaDescRef} placeholder='Description...' />
+      <hr />
+      <TextArea ref={textAreaDescRef} placeholder="Description..." />
     </PopupTemplate>
   );
 };

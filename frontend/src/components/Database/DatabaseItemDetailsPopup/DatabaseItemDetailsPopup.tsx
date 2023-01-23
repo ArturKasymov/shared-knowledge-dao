@@ -1,18 +1,30 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
+import styled from 'styled-components';
 
 import PopupTemplate from 'components/PopupTemplate';
-import { Button, Label, TextArea } from 'components/Widgets';
+import { Button, Label, TextArea, TransferValueInput } from 'components/Widgets';
 
+import checkIfSufficientValue from 'utils/checkIfSufficientValue';
 import { DatabaseItem } from 'utils/getDatabaseItem';
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: start;
+  padding-bottom: 4px;
+`;
 
 interface DatabaseItemDetailsPopupProps {
   item: DatabaseItem;
+  proposalPrice: number;
   onPopupClose: () => void;
-  onItemPropose: (id: number, text: string, description: string) => void;
+  onItemPropose: (id: number, text: string, description: string, transferValue: number) => void;
 }
 
 const DatabaseItemDetailsPopup = ({
   item,
+  proposalPrice,
   onPopupClose,
   onItemPropose,
 }: DatabaseItemDetailsPopupProps): JSX.Element => {
@@ -20,6 +32,12 @@ const DatabaseItemDetailsPopup = ({
   const textAreaDescRef = useRef<HTMLTextAreaElement>(null);
 
   const [isBeingModified, setIsBeingModified] = useState(false);
+  const [transferValue, setTransferValue] = useState(0);
+
+  const isSufficientValue = useCallback(
+    () => checkIfSufficientValue(transferValue, proposalPrice),
+    [transferValue, proposalPrice]
+  );
 
   const handleCancel = () => {
     setIsBeingModified(false);
@@ -31,7 +49,12 @@ const DatabaseItemDetailsPopup = ({
   const handlePropose = () => {
     setIsBeingModified(false);
     if (textAreaItemRef.current && textAreaDescRef.current) {
-      onItemPropose(item.id, textAreaItemRef.current.value, textAreaDescRef.current.value);
+      onItemPropose(
+        item.id,
+        textAreaItemRef.current.value,
+        textAreaDescRef.current.value,
+        transferValue
+      );
     }
   };
 
@@ -43,9 +66,18 @@ const DatabaseItemDetailsPopup = ({
   return (
     <PopupTemplate
       leftBottom={
-        <Label>
-          <span>ID:</span> {item.id}
-        </Label>
+        <Wrapper>
+          <Label>
+            <span>ID:</span> {item.id}
+          </Label>
+          {isBeingModified && (
+            <TransferValueInput
+              sufficient={isSufficientValue()}
+              proposalPrice={proposalPrice}
+              onInputChange={setTransferValue}
+            />
+          )}
+        </Wrapper>
       }
       buttons={
         isBeingModified ? (
@@ -70,13 +102,12 @@ const DatabaseItemDetailsPopup = ({
         defaultValue={item.text}
         disabled={!isBeingModified || undefined}
       />
-      {isBeingModified && <>
-        <hr/>
-        <TextArea
-          ref={textAreaDescRef}
-          placeholder='Description...'
-        />
-      </>}
+      {isBeingModified && (
+        <>
+          <hr />
+          <TextArea ref={textAreaDescRef} placeholder="Description..." />
+        </>
+      )}
     </PopupTemplate>
   );
 };

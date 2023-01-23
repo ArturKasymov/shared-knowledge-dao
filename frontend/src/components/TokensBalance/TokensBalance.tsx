@@ -57,9 +57,9 @@ const TokensBalanceStyling = styled.div<{ empty: boolean }>`
 `;
 
 const TokensBalanceContent = ({ balance }: { balance: number }): JSX.Element | null => (
-    <div className="balance-content-logged">
-      <span>{balance}</span>
-    </div>
+  <div className="balance-content-logged">
+    <span>{balance}</span>
+  </div>
 );
 
 export interface TokensBalanceProps {

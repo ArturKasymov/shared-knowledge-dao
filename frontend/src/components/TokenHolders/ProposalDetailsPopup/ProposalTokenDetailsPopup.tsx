@@ -62,7 +62,7 @@ const ProposalTokenDetailsPopup = ({
     <Wrapper>
       <p>{action.toUpperCase()} TOKEN</p>
       <AddressInput defaultValue={accountAddress} valid disabled />
-      <hr/>
+      <hr />
       <TextArea value={`Description: ${description}`} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>

@@ -9,7 +9,7 @@ import DatabaseItem from 'components/DatabaseItem';
 import PlaceholderDatabaseItem from 'components/DatabaseItem/Placeholder';
 import { displayErrorToast } from 'components/NotificationToast';
 
-import { ErrorToastMessages } from 'shared/constants';
+import { ErrorToastMessages, MIN_PROPOSAL_PRICE } from 'shared/constants';
 import { RootState } from 'redux/store';
 import { setAllDatabaseItems } from 'redux/slices/databaseItemsSlice';
 import { queries } from 'shared/layout';
@@ -49,6 +49,7 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
   const dispatch = useDispatch();
   const loggedAccount = useSelector((state: RootState) => state.walletAccounts.account);
   const testDatabaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
+  const tokenHolders = useSelector((state: RootState) => state.tokenHolders.tokenHolders);
   const [databaseItemDetailsDisplay, setDatabaseItemDetailsDisplay] =
     useState<DatabaseItemModel | null>(null);
   const [proposeNewItemDisplay, setProposeNewItemDisplay] = useState(false);
@@ -114,26 +115,39 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     return 0;
   };
 
-  const handleProposeAdd = (text: string, description: string) => {
+  const handleProposeAdd = (text: string, description: string, transferValue: number) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, description, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+      const $transferValue = tokenHolders.some((holder) => holder.address === loggedAccount.address)
+        ? undefined
+        : transferValue;
+      proposeAddDatabaseItem(text, description, loggedAccount, api, $transferValue).then(() =>
+        setProposeNewItemDisplay(false)
+      );
     }
   };
 
-  const handleProposeModify = (id: number, text: string, description: string) => {
+  const handleProposeModify = (
+    id: number,
+    text: string,
+    description: string,
+    transferValue: number
+  ) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeModifyDatabaseItem(id, text, description, loggedAccount, api).then(() =>
-        setDatabaseItemDetailsDisplay(null)
+      const $transferValue = tokenHolders.some((holder) => holder.address === loggedAccount.address)
+        ? undefined
+        : transferValue;
+      proposeModifyDatabaseItem(id, text, description, loggedAccount, api, $transferValue).then(
+        () => setDatabaseItemDetailsDisplay(null)
       );
     }
   };
@@ -150,11 +164,13 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
+          proposalPrice={MIN_PROPOSAL_PRICE}
         />
       )}
       {databaseItemDetailsDisplay && (
         <DatabaseItemDetailsPopup
           item={databaseItemDetailsDisplay}
+          proposalPrice={100}
           onPopupClose={() => setDatabaseItemDetailsDisplay(null)}
           onItemPropose={handleProposeModify}
         />
