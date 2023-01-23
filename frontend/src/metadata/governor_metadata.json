@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xeb8baca1416c110a831c5204197cc43eeffb9334d9b0036462f066036c2f37fe",
+    "hash": "0xc5c7de48d07acf6b638f5ba31fa8950d417688b081090b22e7ab1077bc7dbc3d",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -430,7 +430,9 @@
               }
             }
           ],
-          "docs": [],
+          "docs": [
+            " Executes the proposal, and returns the item id in the database (if relevant)"
+          ],
           "label": "execute",
           "mutates": true,
           "payable": false,
@@ -619,7 +621,9 @@
         },
         {
           "args": [],
-          "docs": [],
+          "docs": [
+            " (For testing) Deletes the contract from the blockchain."
+          ],
           "label": "suicide",
           "mutates": true,
           "payable": false,

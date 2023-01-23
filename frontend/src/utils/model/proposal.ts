@@ -5,6 +5,7 @@ type Timestamp = number;
 interface ProposalBase {
   kind: ProposalKind;
   id: number;
+  description: string;
   votes: number;
   hasSelfVoted: boolean;
   voteEnd: Timestamp;
@@ -38,26 +39,28 @@ export type ProposalToken = ProposalTokenMint | ProposalTokenBurn;
 
 export type Proposal = ProposalDatabase | ProposalToken;
 
-export const newAddProposal = (id: number, item: string): ProposalItemAdd => ({
+export const newAddProposal = (id: number, item: string, description: string): ProposalItemAdd => ({
   kind: 'itemAdd',
   id,
   item,
+  description,
   votes: 0,
   hasSelfVoted: false,
   voteEnd: Date.now() + 60 * 1000, // FIXME
   executed: false,
-  quorum: 100, // FIXME
+  quorum: 25, // FIXME
 });
 
-export const newMintProposal = (id: number, recipient: string): ProposalTokenMint => ({
+export const newMintProposal = (id: number, recipient: string, description: string): ProposalTokenMint => ({
   kind: 'tokenMint',
   id,
   recipient,
+  description,
   votes: 0,
   hasSelfVoted: false,
   voteEnd: Date.now() + 60 * 1000, // FIXME
   executed: false,
-  quorum: 100, // FIXME
+  quorum: 25, // FIXME
 });
 
 export const isQuorumReached = (proposal: ProposalBase): boolean =>
@@ -67,7 +70,7 @@ export const isActive = (proposal: ProposalBase): boolean => {
   if (proposal.executed) return false;
 
   const now = Date.now();
-  return (now <= proposal.voteEnd || isQuorumReached(proposal));
+  return now <= proposal.voteEnd || isQuorumReached(proposal);
 };
 
 export const isDatabaseProposal = (proposal: Proposal): proposal is ProposalDatabase =>

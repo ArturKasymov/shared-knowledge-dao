@@ -45,6 +45,7 @@ interface ProposalModifyDetailsPopupProps {
   itemId: number;
   currentItem: string;
   proposedItem: string;
+  description: string;
   votes: number;
   voteDeadline: Date;
   canVote: boolean;
@@ -59,6 +60,7 @@ const ProposalModifyDetailsPopup = ({
   itemId,
   currentItem,
   proposedItem,
+  description,
   votes,
   voteDeadline,
   canVote,
@@ -83,6 +85,8 @@ const ProposalModifyDetailsPopup = ({
       <div className="with-arrow">
         <TextArea value={proposedItem} disabled />
       </div>
+      <hr/>
+      <TextArea value={description} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>
 );

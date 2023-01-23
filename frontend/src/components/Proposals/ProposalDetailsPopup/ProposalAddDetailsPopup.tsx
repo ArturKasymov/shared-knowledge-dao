@@ -24,6 +24,7 @@ const Wrapper = styled.div`
 interface ProposalAddDetailsPopupProps {
   id: number;
   item: string;
+  description: string;
   votes: number;
   voteDeadline: Date;
   canVote: boolean;
@@ -36,6 +37,7 @@ interface ProposalAddDetailsPopupProps {
 const ProposalAddDetailsPopup = ({
   id,
   item,
+  description,
   votes,
   voteDeadline,
   canVote,
@@ -57,6 +59,8 @@ const ProposalAddDetailsPopup = ({
     <Wrapper>
       <p>ADD</p>
       <TextArea value={item} disabled />
+      <hr/>
+      <TextArea value={`Description: ${description}`} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>
 );

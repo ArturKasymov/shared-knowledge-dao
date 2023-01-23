@@ -140,15 +140,15 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  const handleProposeAdd = (text: string) => {
+  const handleProposeAdd = (text: string, description: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, loggedAccount, api, (proposalId) =>
-        dispatch(addProposal(newAddProposal(proposalId, text)))
+      proposeAddDatabaseItem(text, description, loggedAccount, api, (proposalId) =>
+        dispatch(addProposal(newAddProposal(proposalId, text, description)))
       ).then(() => setProposeNewItemDisplay(false));
     }
   };
@@ -195,6 +195,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
           <ProposalAddDetailsPopup
             id={proposal.id}
             item={proposal.item}
+            description={proposal.description}
             votes={proposal.votes}
             voteDeadline={new Date(proposal.voteEnd)}
             canVote={canVote}
@@ -216,6 +217,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
               databaseItems.find((item) => item.id === proposal.itemId)?.text ?? 'undefined'
             }
             proposedItem={proposal.item}
+            description={proposal.description}
             votes={proposal.votes}
             voteDeadline={new Date(proposal.voteEnd)}
             canVote={canVote}

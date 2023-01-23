@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xdb1a87d99626fa451770463fe31a62137d1361b04d1ac3a4d847dde960650fba",
+    "hash": "0x2cc175776e610e22c4ad9a0280ed1ece9df9eeb6713b15b7c645ce58ee6546b8",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -72,7 +72,9 @@
               }
             }
           ],
-          "docs": [],
+          "docs": [
+            " Adds the item to the database, and returns its ID"
+          ],
           "label": "add_item",
           "mutates": true,
           "payable": false,
@@ -105,7 +107,9 @@
               }
             }
           ],
-          "docs": [],
+          "docs": [
+            " Overwrites the item identified by the given ID with the new item"
+          ],
           "label": "modify_item",
           "mutates": true,
           "payable": false,
@@ -129,7 +133,10 @@
               }
             }
           ],
-          "docs": [],
+          "docs": [
+            " More efficient than get_by_id(id).is_some()",
+            " because no need to copy Strings around"
+          ],
           "label": "has_item",
           "mutates": false,
           "payable": false,
@@ -181,7 +188,9 @@
         },
         {
           "args": [],
-          "docs": [],
+          "docs": [
+            " (For testing) Deletes the contract from the blockchain."
+          ],
           "label": "suicide",
           "mutates": true,
           "payable": false,

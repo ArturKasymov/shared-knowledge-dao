@@ -46,8 +46,14 @@ const ProposalDetailsPopupTemplate = ({
           <span>VOTED:</span> {votes}%
         </Label>
         <Label>
-          <Countdown date={voteDeadline}
-            renderer={({ minutes, seconds }) => <span>{minutes}:{seconds}</span>} />
+          <Countdown
+            date={voteDeadline}
+            renderer={({ minutes, seconds }) => (
+              <span>
+                {minutes}:{seconds}
+              </span>
+            )}
+          />
         </Label>
       </Wrapper>
     }
@@ -70,7 +76,7 @@ const ProposalDetailsPopupTemplate = ({
         >
           Vote Against
         </Button>
-        
+
         <Button
           type="button"
           className="primary-btn"

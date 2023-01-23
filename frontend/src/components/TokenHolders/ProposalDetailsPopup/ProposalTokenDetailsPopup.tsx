@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import ProposalDetailsPopupTemplate from 'components/ProposalDetailsPopupTemplate';
-import { AddressInput } from 'components/Widgets';
+import { AddressInput, TextArea } from 'components/Widgets';
 
 const Wrapper = styled.div`
   min-width: 480px;
@@ -22,9 +22,11 @@ const Wrapper = styled.div`
   }
 `;
 
-interface ProposalMintDetailsPopupProps {
+interface ProposalTokenDetailsPopupProps {
   id: number;
+  action: 'Mint' | 'Burn';
   accountAddress: string;
+  description: string;
   votes: number;
   voteDeadline: Date;
   canVote: boolean;
@@ -34,9 +36,11 @@ interface ProposalMintDetailsPopupProps {
   onExecute: (id: number) => void;
 }
 
-const ProposalMintDetailsPopup = ({
+const ProposalTokenDetailsPopup = ({
   id,
+  action,
   accountAddress,
+  description,
   votes,
   voteDeadline,
   canVote,
@@ -44,7 +48,7 @@ const ProposalMintDetailsPopup = ({
   onPopupClose,
   onVote,
   onExecute,
-}: ProposalMintDetailsPopupProps): JSX.Element => (
+}: ProposalTokenDetailsPopupProps): JSX.Element => (
   <ProposalDetailsPopupTemplate
     id={id}
     votes={votes}
@@ -56,10 +60,12 @@ const ProposalMintDetailsPopup = ({
     onExecute={onExecute}
   >
     <Wrapper>
-      <p>MINT TOKEN</p>
+      <p>{action.toUpperCase()} TOKEN</p>
       <AddressInput defaultValue={accountAddress} valid disabled />
+      <hr/>
+      <TextArea value={`Description: ${description}`} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>
 );
 
-export default ProposalMintDetailsPopup;
+export default ProposalTokenDetailsPopup;

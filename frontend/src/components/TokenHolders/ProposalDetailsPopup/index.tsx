@@ -1,3 +1,3 @@
-import ProposalMintDetailsPopup from './ProposalMintDetailsPopup';
+import ProposalTokenDetailsPopup from './ProposalTokenDetailsPopup';
 
-export { ProposalMintDetailsPopup };
+export { ProposalTokenDetailsPopup };

@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x766dfa30d05047ff53bd09ba297cc794cc670cb82530a8b951ae3c40c8b1ad0b",
+    "hash": "0x494caf508dd67f588284335a4d72cfcc9b4244dc09f0b99acf5c2539b10bb313",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.68.0-nightly"
   },
@@ -99,88 +99,14 @@
         },
         {
           "args": [],
-          "docs": [],
+          "docs": [
+            " (For testing) Deletes the contract from the blockchain."
+          ],
           "label": "suicide",
           "mutates": true,
           "payable": false,
           "returnType": null,
           "selector": "0x5cb03589"
-        },
-        {
-          "args": [
-            {
-              "label": "operator",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput1"
-                ],
-                "type": 0
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput2"
-                ],
-                "type": 15
-              }
-            },
-            {
-              "label": "approved",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput3"
-                ],
-                "type": 26
-              }
-            }
-          ],
-          "docs": [
-            " Approves `operator` to withdraw the `id` token from the caller's account.",
-            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
-            "",
-            " On success a `Approval` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Returns `SelfApprove` error if it is self approve.",
-            "",
-            " Returns `NotApproved` error if caller is not owner of `id`."
-          ],
-          "label": "PSP34::approve",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "ApproveOutput"
-            ],
-            "type": 25
-          },
-          "selector": "0x1932a8b0"
-        },
-        {
-          "args": [],
-          "docs": [
-            " Returns the collection `Id` of the NFT token.",
-            "",
-            " This can represents the relationship between tokens/contracts/pallets."
-          ],
-          "label": "PSP34::collection_id",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "CollectionIdOutput"
-            ],
-            "type": 5
-          },
-          "selector": "0xffa27a5f"
         },
         {
           "args": [
@@ -273,30 +199,78 @@
         {
           "args": [
             {
+              "label": "operator",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "ApproveInput1"
+                ],
+                "type": 0
+              }
+            },
+            {
               "label": "id",
               "type": {
                 "displayName": [
                   "psp34_external",
-                  "OwnerOfInput1"
+                  "ApproveInput2"
                 ],
-                "type": 5
+                "type": 15
+              }
+            },
+            {
+              "label": "approved",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "ApproveInput3"
+                ],
+                "type": 26
               }
             }
           ],
           "docs": [
-            " Returns the owner of the token if any."
+            " Approves `operator` to withdraw the `id` token from the caller's account.",
+            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
+            "",
+            " On success a `Approval` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Returns `SelfApprove` error if it is self approve.",
+            "",
+            " Returns `NotApproved` error if caller is not owner of `id`."
           ],
-          "label": "PSP34::owner_of",
+          "label": "PSP34::approve",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34_external",
+              "ApproveOutput"
+            ],
+            "type": 25
+          },
+          "selector": "0x1932a8b0"
+        },
+        {
+          "args": [],
+          "docs": [
+            " Returns the collection `Id` of the NFT token.",
+            "",
+            " This can represents the relationship between tokens/contracts/pallets."
+          ],
+          "label": "PSP34::collection_id",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "psp34_external",
-              "OwnerOfOutput"
+              "CollectionIdOutput"
             ],
-            "type": 19
+            "type": 5
           },
-          "selector": "0x1168624d"
+          "selector": "0xffa27a5f"
         },
         {
           "args": [
@@ -367,33 +341,30 @@
         {
           "args": [
             {
-              "label": "index",
+              "label": "id",
               "type": {
                 "displayName": [
-                  "psp34enumerable_external",
-                  "TokenByIndexInput1"
+                  "psp34_external",
+                  "OwnerOfInput1"
                 ],
-                "type": 9
+                "type": 5
               }
             }
           ],
           "docs": [
-            " Returns a token `Id` at a given `index` of all the tokens stored by the contract.",
-            " Use along with `total_supply` to enumerate all tokens.",
-            "",
-            " The start index is zero."
+            " Returns the owner of the token if any."
           ],
-          "label": "PSP34Enumerable::token_by_index",
+          "label": "PSP34::owner_of",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
-              "psp34enumerable_external",
-              "TokenByIndexOutput"
+              "psp34_external",
+              "OwnerOfOutput"
             ],
-            "type": 23
+            "type": 19
           },
-          "selector": "0xcd0340d0"
+          "selector": "0x1168624d"
         },
         {
           "args": [
@@ -435,6 +406,37 @@
             "type": 23
           },
           "selector": "0x3bcfb511"
+        },
+        {
+          "args": [
+            {
+              "label": "index",
+              "type": {
+                "displayName": [
+                  "psp34enumerable_external",
+                  "TokenByIndexInput1"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [
+            " Returns a token `Id` at a given `index` of all the tokens stored by the contract.",
+            " Use along with `total_supply` to enumerate all tokens.",
+            "",
+            " The start index is zero."
+          ],
+          "label": "PSP34Enumerable::token_by_index",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34enumerable_external",
+              "TokenByIndexOutput"
+            ],
+            "type": 23
+          },
+          "selector": "0xcd0340d0"
         }
       ]
     },

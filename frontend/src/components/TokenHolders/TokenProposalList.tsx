@@ -34,7 +34,7 @@ import {
 import { voteForProposal } from 'utils/voteGovernor';
 import { executeProposal } from 'utils/executeGovernor';
 
-import { ProposalMintDetailsPopup } from './ProposalDetailsPopup';
+import { ProposalTokenDetailsPopup } from './ProposalDetailsPopup';
 import TokenProposeMintPopup from './TokenProposePopup';
 
 const Wrapper = styled.div`
@@ -145,15 +145,15 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
     }
   };
 
-  const handleProposeMint = (recipientAddress: string) => {
+  const handleProposeMint = (recipientAddress: string, description: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeMintToken(recipientAddress, loggedAccount, api, (proposalId) =>
-        dispatch(addProposal(newMintProposal(proposalId, recipientAddress)))
+      proposeMintToken(recipientAddress, description, loggedAccount, api, (proposalId) =>
+        dispatch(addProposal(newMintProposal(proposalId, recipientAddress, description)))
       ).then(() => setProposeTokenDisplay(false));
     }
   };
@@ -181,9 +181,11 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
     const canExecute = !!loggedAccount && !proposal.executed && isQuorumReached(proposal);
     const accountAddress = proposal.kind === 'tokenMint' ? proposal.recipient : proposal.holder;
     return (
-      <ProposalMintDetailsPopup
+      <ProposalTokenDetailsPopup
         id={proposal.id}
+        action={proposal.kind === 'tokenMint' ? 'Mint' : 'Burn'}
         accountAddress={accountAddress}
+        description={proposal.description}
         votes={proposal.votes}
         voteDeadline={new Date(proposal.voteEnd)}
         canVote={canVote}
@@ -198,15 +200,15 @@ const TokenProposalList = ({ api }: TokenProposalListProps): JSX.Element => {
   return (
     <>
       <>
-      {proposeTokenDisplay && (
-        <TokenProposeMintPopup
-          onPopupClose={() => setProposeTokenDisplay(false)}
-          onPropose={handleProposeMint}
-        />
-      )}
-      {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
+        {proposeTokenDisplay && (
+          <TokenProposeMintPopup
+            onPopupClose={() => setProposeTokenDisplay(false)}
+            onPropose={handleProposeMint}
+          />
+        )}
+        {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
       </>
-        <Wrapper>
+      <Wrapper>
         <div className="toggle-switch-wrapper">
           <ToggleSwitch checked={showInactiveProposals} onChange={setShowInactiveProposals} />
         </div>

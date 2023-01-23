@@ -5,18 +5,19 @@ import { Button, Label, TextArea } from 'components/Widgets';
 
 interface DatabaseProposeNewItemPopupProps {
   onPopupClose: () => void;
-  onItemPropose: (item: string) => void;
+  onItemPropose: (item: string, description: string) => void;
 }
 
 const DatabaseProposeNewItemPopup = ({
   onPopupClose,
   onItemPropose,
 }: DatabaseProposeNewItemPopupProps): JSX.Element => {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const textAreaItemRef = useRef<HTMLTextAreaElement>(null);
+  const textAreaDescRef = useRef<HTMLTextAreaElement>(null);
 
   const handlePropose = () => {
-    if (textAreaRef.current) {
-      onItemPropose(textAreaRef.current.value);
+    if (textAreaItemRef.current && textAreaDescRef.current) {
+      onItemPropose(textAreaItemRef.current.value, textAreaDescRef.current.value);
     }
   };
 
@@ -40,7 +41,9 @@ const DatabaseProposeNewItemPopup = ({
       }
       onPopupClose={onPopupClose}
     >
-      <TextArea ref={textAreaRef} />
+      <TextArea ref={textAreaItemRef} />
+      <hr />
+      <TextArea ref={textAreaDescRef} placeholder='Description...' />
     </PopupTemplate>
   );
 };

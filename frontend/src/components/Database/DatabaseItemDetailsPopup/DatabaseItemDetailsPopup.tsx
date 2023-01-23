@@ -8,7 +8,7 @@ import { DatabaseItem } from 'utils/getDatabaseItem';
 interface DatabaseItemDetailsPopupProps {
   item: DatabaseItem;
   onPopupClose: () => void;
-  onItemPropose: (id: number, text: string) => void;
+  onItemPropose: (id: number, text: string, description: string) => void;
 }
 
 const DatabaseItemDetailsPopup = ({
@@ -16,21 +16,22 @@ const DatabaseItemDetailsPopup = ({
   onPopupClose,
   onItemPropose,
 }: DatabaseItemDetailsPopupProps): JSX.Element => {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const textAreaItemRef = useRef<HTMLTextAreaElement>(null);
+  const textAreaDescRef = useRef<HTMLTextAreaElement>(null);
 
   const [isBeingModified, setIsBeingModified] = useState(false);
 
   const handleCancel = () => {
     setIsBeingModified(false);
-    if (textAreaRef.current) {
-      textAreaRef.current.value = item.text;
+    if (textAreaItemRef.current) {
+      textAreaItemRef.current.value = item.text;
     }
   };
 
   const handlePropose = () => {
     setIsBeingModified(false);
-    if (textAreaRef.current) {
-      onItemPropose(item.id, textAreaRef.current.value);
+    if (textAreaItemRef.current && textAreaDescRef.current) {
+      onItemPropose(item.id, textAreaItemRef.current.value, textAreaDescRef.current.value);
     }
   };
 
@@ -65,10 +66,17 @@ const DatabaseItemDetailsPopup = ({
       onPopupClose={onPopupClose}
     >
       <TextArea
-        ref={textAreaRef}
+        ref={textAreaItemRef}
         defaultValue={item.text}
         disabled={!isBeingModified || undefined}
       />
+      {isBeingModified && <>
+        <hr/>
+        <TextArea
+          ref={textAreaDescRef}
+          placeholder='Description...'
+        />
+      </>}
     </PopupTemplate>
   );
 };

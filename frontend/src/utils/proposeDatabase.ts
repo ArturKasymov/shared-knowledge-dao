@@ -13,6 +13,7 @@ import addresses from '../metadata/addresses.json';
 
 export const proposeAddItem = async (
   text: string,
+  description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
   onSuccess?: (proposalId: number) => void
@@ -29,7 +30,7 @@ export const proposeAddItem = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       text,
-      '' // description
+      description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
@@ -45,6 +46,7 @@ export const proposeAddItem = async (
 export const proposeModifyItem = async (
   id: number,
   text: string,
+  description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
   onSuccess?: (proposalId: number) => void
@@ -62,7 +64,7 @@ export const proposeModifyItem = async (
       },
       id,
       text,
-      '' // description
+      description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);

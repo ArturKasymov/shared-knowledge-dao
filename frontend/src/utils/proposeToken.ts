@@ -13,6 +13,7 @@ import addresses from '../metadata/addresses.json';
 
 export const proposeMint = async (
   recipientAddress: string,
+  description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
   onSuccess?: (proposalId: number) => void
@@ -29,7 +30,7 @@ export const proposeMint = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       recipientAddress,
-      '' // description
+      description,
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
@@ -44,6 +45,7 @@ export const proposeMint = async (
 
 export const proposeBurn = async (
   holderAddress: string,
+  description: string,
   loggedUser: InjectedAccountWithMeta,
   api: ApiPromise,
   onSuccess?: (proposalId: number) => void
@@ -60,7 +62,7 @@ export const proposeBurn = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       holderAddress,
-      '' // description
+      description,
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);

@@ -84,14 +84,14 @@ export default ({ api }: TokenHoldersProps): JSX.Element => {
     dispatch(setAllTokenHolders(tokenHolders));
   }, [tokenHolders, tokenHolders.length, dispatch]);
 
-  const handleProposeBurn = (holderAddress: string) => {
+  const handleProposeBurn = (holderAddress: string, description: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeBurnToken(holderAddress, loggedAccount, api).then(() =>
+      proposeBurnToken(holderAddress, description, loggedAccount, api).then(() =>
         setTokenHolderDetailsDisplay(null)
       );
     }

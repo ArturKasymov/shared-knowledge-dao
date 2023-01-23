@@ -114,25 +114,25 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     return 0;
   };
 
-  const handleProposeAdd = (text: string) => {
+  const handleProposeAdd = (text: string, description: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+      proposeAddDatabaseItem(text, description, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
     }
   };
 
-  const handleProposeModify = (id: number, text: string) => {
+  const handleProposeModify = (id: number, text: string, description: string) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeModifyDatabaseItem(id, text, loggedAccount, api).then(() =>
+      proposeModifyDatabaseItem(id, text, description, loggedAccount, api).then(() =>
         setDatabaseItemDetailsDisplay(null)
       );
     }
