@@ -33,8 +33,6 @@ pub mod database {
         }
     }
 
-    type Event = <DatabaseContract as ContractEventBase>::Type;
-
     pub type ItemId = u32;
     pub type Item = String;
 
@@ -57,7 +55,7 @@ pub mod database {
             })
         }
 
-        // Adds the item to the database, and returns its ID
+        /// Adds the item to the database, and returns its ID
         #[ink(message)]
         #[modifiers(only_owner)]
         pub fn add_item(&mut self, item: Item) -> Result<ItemId, DatabaseError> {
@@ -67,12 +65,12 @@ pub mod database {
             Ok(id)
         }
 
-        // Overwrites the item identified by the given ID with the new item
+        /// Overwrites the item identified by the given ID with the new item
         #[ink(message)]
         #[modifiers(only_owner)]
         pub fn modify_item(&mut self, id: ItemId, item: Item) -> Result<(), DatabaseError> {
             match self.items.get(id) {
-                None => return Err(DatabaseError::IdNotFound),
+                None => Err(DatabaseError::IdNotFound),
                 Some(_) => {
                     self.items.insert(id, &item);
                     Self::emit_event(Self::env(), Event::ItemModified(ItemModified { id }));
@@ -81,6 +79,8 @@ pub mod database {
             }
         }
 
+        /// More efficient than get_by_id(id).is_some()
+        /// because no need to copy Strings around
         #[ink(message)]
         pub fn has_item(&self, id: ItemId) -> bool {
             self.items.contains(id)
@@ -96,7 +96,7 @@ pub mod database {
             self.next_item_id
         }
 
-        // (For testing) Deletes the contract from the blockchain.
+        /// (For testing) Deletes the contract from the blockchain.
         #[ink(message)]
         pub fn suicide(&mut self) {
             self.env().terminate_contract(self.env().caller());
@@ -112,6 +112,8 @@ pub mod database {
             emitter.emit_event(event);
         }
     }
+    
+    type Event = <DatabaseContract as ContractEventBase>::Type;
 
     #[ink(event)]
     pub struct ItemAdded {
