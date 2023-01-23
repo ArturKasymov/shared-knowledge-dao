@@ -333,6 +333,7 @@ pub mod governor {
         #[ink(message)]
         pub fn propose_burn(&mut self, holder: AccountId, description: String) -> Result<ProposalId, GovernorError> {
             self.require_token_owner(Self::env().caller())?;
+            self.require_token_owner(holder)?;
             self.require_no_active_token_proposal(&holder)?;   
 
             let now = self.env().block_timestamp();
