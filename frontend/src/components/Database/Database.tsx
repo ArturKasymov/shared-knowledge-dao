@@ -114,25 +114,32 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
     return 0;
   };
 
-  const handleProposeAdd = (text: string, description: string) => {
+  const handleProposeAdd = (text: string, description: string, transferValue?: number) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, description, loggedAccount, api).then(() => setProposeNewItemDisplay(false));
+      proposeAddDatabaseItem(text, description, loggedAccount, api, transferValue).then(() =>
+        setProposeNewItemDisplay(false)
+      );
     }
   };
 
-  const handleProposeModify = (id: number, text: string, description: string) => {
+  const handleProposeModify = (
+    id: number,
+    text: string,
+    description: string,
+    transferValue?: number
+  ) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeModifyDatabaseItem(id, text, description, loggedAccount, api).then(() =>
+      proposeModifyDatabaseItem(id, text, description, loggedAccount, api, transferValue).then(() =>
         setDatabaseItemDetailsDisplay(null)
       );
     }
@@ -150,7 +157,8 @@ const Database = ({ api }: DatabaseProps): JSX.Element => {
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
-        />
+          proposalPrice={100}
+        /> // TODO add here proposal price
       )}
       {databaseItemDetailsDisplay && (
         <DatabaseItemDetailsPopup

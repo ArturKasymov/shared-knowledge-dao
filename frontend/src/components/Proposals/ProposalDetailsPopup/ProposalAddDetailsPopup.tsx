@@ -59,7 +59,7 @@ const ProposalAddDetailsPopup = ({
     <Wrapper>
       <p>ADD</p>
       <TextArea value={item} disabled />
-      <hr/>
+      <hr />
       <TextArea value={`Description: ${description}`} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>

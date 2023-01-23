@@ -85,7 +85,7 @@ const ProposalModifyDetailsPopup = ({
       <div className="with-arrow">
         <TextArea value={proposedItem} disabled />
       </div>
-      <hr/>
+      <hr />
       <TextArea value={`Description: ${description}`} disabled />
     </Wrapper>
   </ProposalDetailsPopupTemplate>

@@ -51,7 +51,11 @@ export const newAddProposal = (id: number, item: string, description: string): P
   quorum: 25, // FIXME
 });
 
-export const newMintProposal = (id: number, recipient: string, description: string): ProposalTokenMint => ({
+export const newMintProposal = (
+  id: number,
+  recipient: string,
+  description: string
+): ProposalTokenMint => ({
   kind: 'tokenMint',
   id,
   recipient,

@@ -59,12 +59,12 @@ const CustomToast = styled(ToastContainer).attrs({
   }
 `;
 
-const NotificationToast = (): JSX.Element => <CustomToast position="bottom-center" hideProgressBar />;
+const NotificationToast = (): JSX.Element => (
+  <CustomToast position="bottom-center" hideProgressBar />
+);
 
 export const displaySuccessToast = (message: string): void => {
-  toast(
-    <ToastMessage toastType="success" toastHeading={message} toastParagraph='Success' />
-  );
+  toast(<ToastMessage toastType="success" toastHeading={message} toastParagraph="Success" />);
 };
 
 export const displayWarningToast = (): void => {
@@ -75,7 +75,7 @@ export const displayWarningToast = (): void => {
     </span>
   );
   toast(
-    <ToastMessage toastType="warning" toastHeading='Warning' toastParagraph={toastParagraph} />
+    <ToastMessage toastType="warning" toastHeading="Warning" toastParagraph={toastParagraph} />
   );
 };
 

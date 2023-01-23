@@ -30,7 +30,7 @@ export const proposeMint = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       recipientAddress,
-      description,
+      description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);
@@ -62,7 +62,7 @@ export const proposeBurn = async (
         gasLimit: GAS_LIMIT_VALUE,
       },
       holderAddress,
-      description,
+      description
     )
     .signAndSend(loggedUser.address, { signer: injector.signer }, ({ events = [], status }) => {
       const proposalId = handleProposalAddedEvent(events, status, api);

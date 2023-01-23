@@ -140,14 +140,14 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  const handleProposeAdd = (text: string, description: string) => {
+  const handleProposeAdd = (text: string, description: string, transferValue?: number) => {
     if (!loggedAccount) {
       displayErrorToast(ErrorToastMessages.NO_WALLET);
       return;
     }
 
     if (api) {
-      proposeAddDatabaseItem(text, description, loggedAccount, api, (proposalId) =>
+      proposeAddDatabaseItem(text, description, loggedAccount, api, transferValue, (proposalId) =>
         dispatch(addProposal(newAddProposal(proposalId, text, description)))
       ).then(() => setProposeNewItemDisplay(false));
     }
@@ -236,7 +236,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
-        />
+          proposalPrice={100}
+        /> // TODO add here proposal price
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
       <Layout api={api}>

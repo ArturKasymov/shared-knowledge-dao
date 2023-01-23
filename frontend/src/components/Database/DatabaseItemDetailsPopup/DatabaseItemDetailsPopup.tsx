@@ -70,13 +70,12 @@ const DatabaseItemDetailsPopup = ({
         defaultValue={item.text}
         disabled={!isBeingModified || undefined}
       />
-      {isBeingModified && <>
-        <hr/>
-        <TextArea
-          ref={textAreaDescRef}
-          placeholder='Description...'
-        />
-      </>}
+      {isBeingModified && (
+        <>
+          <hr />
+          <TextArea ref={textAreaDescRef} placeholder="Description..." />
+        </>
+      )}
     </PopupTemplate>
   );
 };
