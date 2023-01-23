@@ -32,8 +32,7 @@ const TokensBalanceStyling = styled.div<{ empty: boolean }>`
 
   & span {
     font-weight: 500;
-    font-size: 14px;
-    line-height: 135%;
+    font-size: 20px;
 
     display: flex;
     align-items: center;
@@ -42,6 +41,8 @@ const TokensBalanceStyling = styled.div<{ empty: boolean }>`
 
   & .balance-content-logged {
     display: flex;
+    justify-content: center;
+    padding-bottom: 3px;
   }
 
   .token-icon {
@@ -55,17 +56,11 @@ const TokensBalanceStyling = styled.div<{ empty: boolean }>`
   }
 `;
 
-const TokensBalanceContent = ({ balance }: { balance?: number }): JSX.Element | null => {
-  if (!balance) {
-    return null;
-  }
-
-  return (
+const TokensBalanceContent = ({ balance }: { balance: number }): JSX.Element | null => (
     <div className="balance-content-logged">
       <span>{balance}</span>
     </div>
-  );
-};
+);
 
 export interface TokensBalanceProps {
   loggedAccountAddress?: string;
