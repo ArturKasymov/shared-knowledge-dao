@@ -11,7 +11,7 @@ import ToggleSwitch from 'components/ToggleSwitch';
 import SmoothOptional from 'components/SmoothOptional';
 import PlaceholderProposal from 'components/Proposal/Placeholder';
 
-import { ErrorToastMessages } from 'shared/constants';
+import { ErrorToastMessages, MIN_PROPOSAL_PRICE } from 'shared/constants';
 import { RootState } from 'redux/store';
 import {
   setAllProposals,
@@ -75,6 +75,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     isDatabaseProposal
   );
   const databaseItems = useSelector((state: RootState) => state.databaseItems.databaseItems);
+  const tokenHolders = useSelector((state: RootState) => state.tokenHolders.tokenHolders);
   const [showInactiveProposals, setShowInactiveProposals] = useState(false);
   const [proposalDetailsDisplay, setProposalDetailsDisplay] =
     useState<ProposalDatabaseModel | null>(null);
@@ -140,18 +141,31 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
     }
   };
 
-  const handleProposeAdd = (text: string, description: string, transferValue?: number) => {
-    if (!loggedAccount) {
-      displayErrorToast(ErrorToastMessages.NO_WALLET);
-      return;
-    }
+  const handleProposeAdd = useCallback(
+    (text: string, description: string, transferValue: number) => {
+      if (!loggedAccount) {
+        displayErrorToast(ErrorToastMessages.NO_WALLET);
+        return;
+      }
 
-    if (api) {
-      proposeAddDatabaseItem(text, description, loggedAccount, api, transferValue, (proposalId) =>
-        dispatch(addProposal(newAddProposal(proposalId, text, description)))
-      ).then(() => setProposeNewItemDisplay(false));
-    }
-  };
+      if (api) {
+        const $transferValue = tokenHolders.some(
+          (holder) => holder.address === loggedAccount.address
+        )
+          ? undefined
+          : transferValue;
+        proposeAddDatabaseItem(
+          text,
+          description,
+          loggedAccount,
+          api,
+          $transferValue,
+          (proposalId) => dispatch(addProposal(newAddProposal(proposalId, text, description)))
+        ).then(() => setProposeNewItemDisplay(false));
+      }
+    },
+    [loggedAccount, tokenHolders, dispatch, api]
+  );
 
   const displayProposalDetails = (id: number) => {
     // TODO: is it efficient to use testProposals here?
@@ -236,8 +250,8 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
-          proposalPrice={100}
-        /> // TODO add here proposal price
+          proposalPrice={MIN_PROPOSAL_PRICE}
+        />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
       <Layout api={api}>

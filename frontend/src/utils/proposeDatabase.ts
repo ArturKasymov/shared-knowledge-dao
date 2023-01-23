@@ -24,9 +24,10 @@ export const proposeAddItem = async (
   if (!injector) {
     return;
   }
-  const isHolder = (_: InjectedAccountWithMeta) => false; // TODO replace
 
-  const tx = isHolder(loggedUser)
+  const isHolder = transferValue === undefined;
+
+  const tx = isHolder
     ? contract.tx.proposeAddGovernor(
         {
           gasLimit: GAS_LIMIT_VALUE,
@@ -70,9 +71,9 @@ export const proposeModifyItem = async (
     return;
   }
 
-  const isHolder = (_: InjectedAccountWithMeta) => false; // TODO replace
+  const isHolder = transferValue === undefined;
 
-  const tx = isHolder(loggedUser)
+  const tx = isHolder
     ? contract.tx.proposeModifyGovernor(
         {
           gasLimit: GAS_LIMIT_VALUE,

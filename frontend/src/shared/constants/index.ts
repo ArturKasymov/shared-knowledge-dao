@@ -17,3 +17,5 @@ export enum SuccessToastMessages {
   VOTE_CASTED = 'Your vote was successfully submitted. Now wait till the quorum for this proposal is reached :)',
   PROPOSAL_EXECUTED = 'The proposal was successfully executed. Thanks for your contribution :)',
 }
+
+export const MIN_PROPOSAL_PRICE = 100;

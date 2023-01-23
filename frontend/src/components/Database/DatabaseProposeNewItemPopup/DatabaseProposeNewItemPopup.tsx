@@ -1,14 +1,23 @@
 import React, { useCallback, useRef, useState } from 'react';
+import styled from 'styled-components';
 
 import PopupTemplate from 'components/PopupTemplate';
 import { Button, Label, TextArea, TransferValueInput } from 'components/Widgets';
 
 import checkIfSufficientValue from 'utils/checkIfSufficientValue';
 
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: start;
+  padding-bottom: 4px;
+`;
+
 interface DatabaseProposeNewItemPopupProps {
   proposalPrice: number;
   onPopupClose: () => void;
-  onItemPropose: (item: string, description: string, transferValue?: number) => void;
+  onItemPropose: (item: string, description: string, transferValue: number) => void;
 }
 
 const DatabaseProposeNewItemPopup = ({
@@ -36,7 +45,7 @@ const DatabaseProposeNewItemPopup = ({
   return (
     <PopupTemplate
       leftBottom={
-        <>
+        <Wrapper>
           <Label>
             <span>NEW</span>
           </Label>
@@ -46,7 +55,7 @@ const DatabaseProposeNewItemPopup = ({
             proposalPrice={proposalPrice}
             onInputChange={setTransferValue}
           />
-        </>
+        </Wrapper>
       }
       buttons={
         <>
