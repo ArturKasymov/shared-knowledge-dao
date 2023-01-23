@@ -69,13 +69,12 @@ pub mod database {
         #[ink(message)]
         #[modifiers(only_owner)]
         pub fn modify_item(&mut self, id: ItemId, item: Item) -> Result<(), DatabaseError> {
-            match self.items.get(id) {
-                None => Err(DatabaseError::IdNotFound),
-                Some(_) => {
-                    self.items.insert(id, &item);
-                    Self::emit_event(Self::env(), Event::ItemModified(ItemModified { id }));
-                    Ok(())
-                }
+            if self.items.contains(id) {
+                self.items.insert(id, &item);
+                Self::emit_event(Self::env(), Event::ItemModified(ItemModified { id }));
+                Ok(())
+            } else {
+                Err(DatabaseError::IdNotFound)
             }
         }
 
