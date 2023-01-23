@@ -17,7 +17,7 @@ const Wrapper = styled.div`
 
 interface DatabaseItemDetailsPopupProps {
   item: DatabaseItem;
-  proposalPrice: number;
+  proposalPrice?: number;
   onPopupClose: () => void;
   onItemPropose: (id: number, text: string, description: string, transferValue: number) => void;
 }
@@ -35,7 +35,7 @@ const DatabaseItemDetailsPopup = ({
   const [transferValue, setTransferValue] = useState(0);
 
   const isSufficientValue = useCallback(
-    () => checkIfSufficientValue(transferValue, proposalPrice),
+    () => proposalPrice === undefined || checkIfSufficientValue(transferValue, proposalPrice),
     [transferValue, proposalPrice]
   );
 
@@ -70,7 +70,7 @@ const DatabaseItemDetailsPopup = ({
           <Label>
             <span>ID:</span> {item.id}
           </Label>
-          {isBeingModified && (
+          {isBeingModified && (proposalPrice !== undefined) && (
             <TransferValueInput
               sufficient={isSufficientValue()}
               proposalPrice={proposalPrice}

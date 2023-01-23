@@ -269,6 +269,11 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         );
     }
   };
+  
+  const isTokenHolder = useCallback(
+    () => !!loggedAccount && tokenHolders.some((holder) => holder.address === loggedAccount.address),
+    [loggedAccount, tokenHolders]
+  );
 
   return (
     <>
@@ -276,7 +281,7 @@ const ProposalList = ({ api }: ProposalListProps): JSX.Element => {
         <DatabaseProposeNewItemPopup
           onPopupClose={() => setProposeNewItemDisplay(false)}
           onItemPropose={handleProposeAdd}
-          proposalPrice={MIN_PROPOSAL_PRICE}
+          proposalPrice={isTokenHolder() ? undefined : MIN_PROPOSAL_PRICE}
         />
       )}
       {proposalDetailsDisplay && proposalToPopup(proposalDetailsDisplay)}
