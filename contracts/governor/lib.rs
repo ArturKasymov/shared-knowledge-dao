@@ -4,9 +4,7 @@ use ink_lang as ink;
 
 #[ink::contract]
 pub mod governor {
-    use token::token::{
-        TokenContractRef,
-    };
+    use token::token::TokenContractRef;
     use database::database::{
         DatabaseContractRef,
         ItemId, DatabaseError,
@@ -33,17 +31,24 @@ pub mod governor {
 
     use openbrush::contracts::traits::psp34::*;
 
+    /********** ERRORS **********/
+
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum GovernorError {
         ProposalNotFound,
         ProposalAlreadyExecuted,
+        /// Active Modify proposal for item with given ID already exists
         ActiveProposalForItemExists(ProposalId),
+        /// Active Mint/Burn proposal for given account already exists
         ActiveProposalForAccountExists(ProposalId),
+        /// This account has already voted for given proposal
         AlreadyVoted,
         QuorumNotReached,
         VotePeriodEnded,
+        /// Caller required to possess a token for some operations (e.g. vote)
         TokenOwnershipRequired,
+        /// Payable proposals require a minimum transferred value
         InsufficientTransferQuota,
         TokenError(PSP34Error),
         DatabaseError(DatabaseError),
@@ -68,8 +73,8 @@ pub mod governor {
         }
     }
 
-    type Event = <GovernorContract as ContractEventBase>::Type;
-
+    /********** STORAGE **********/
+    
     #[derive(Default, Debug, PartialEq, Eq, SpreadLayout, PackedLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProposalDatabaseKind {
@@ -107,12 +112,14 @@ pub mod governor {
         }
     }
 
-    pub const ONE_MINUTE: u64 = 60 * 1000;
+    // 1min in Timestamp units (ms) 
+    const ONE_MINUTE: u64 = 60 * 1000;
 
     #[derive(Default, Debug, PartialEq, Eq, PackedLayout, SpreadLayout, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Proposal {
         category: ProposalCategory,
+        /// Voting goes on until this time
         vote_end: Timestamp,
         executed: bool,
         description: String,
@@ -174,7 +181,7 @@ pub mod governor {
         For, Against,
     } 
 
-    // range(0, 100)
+    /// range(0, 100)
     pub type Percentage = u8;
 
     #[derive(Default, Debug, PartialEq, Eq, PackedLayout, SpreadLayout, scale::Encode, scale::Decode)]
@@ -189,17 +196,25 @@ pub mod governor {
     #[ink(storage)]
     #[derive(SpreadAllocate)]
     pub struct GovernorContract {
+        /// Maps proposal to percentage of for/against votes casted
         proposal_votes: Mapping<ProposalId, ProposalVote>,
         proposals: Mapping<ProposalId, Proposal>,
+        /// Set  of (P, A) s.t. account A has voted for proposal P
         votes: Mapping<(ProposalId, AccountId), ()>,
+        /// Maps database items to the most recent Modify proposal
         database_proposals: Mapping<ItemId, ProposalId>,
+        /// Maps accounts to the most recent Mint/Burn proposal
         token_proposals: Mapping<AccountId, ProposalId>,
         next_proposal_id: u32,
+        /// "For" votes required for proposal to pass through
         quorum: Percentage,
+        /// Minimum transferred value required in payable proposals
         proposal_price: u128,
         token_contract: Option<AccountId>,
         database_contract: Option<AccountId>,
     }
+
+    /********** GOVERNOR IMPLEMENTATION **********/
     
     impl CrossContractCaller for GovernorContract {}
 
@@ -245,6 +260,8 @@ pub mod governor {
             })
         }
 
+        /********** PROPOSE **********/
+
         // Propose a new item to the database
         fn propose_add(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
             let now = self.env().block_timestamp();
@@ -259,29 +276,20 @@ pub mod governor {
 
         #[ink(message)]
         pub fn propose_add_governor(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            self.require_token(Self::env().caller())?;
+            self.require_token_owner(Self::env().caller())?;
             self.propose_add(item, description)
         }
 
         #[ink(message, payable)]
         pub fn propose_add_external(&mut self, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            if self.env().transferred_value() < self.proposal_price {
-                return Err(GovernorError::InsufficientTransferQuota);
-            }
+            self.require_min_transferred_value()?;
             self.propose_add(item, description)
         }
  
         // Propose modification to existing item in the database
         fn propose_modify(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            if !self.is_item_in_database(item_id) {
-                return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
-            }
-            
-            if let Some(proposal_id) = self.database_proposals.get(item_id) {
-                if self.is_proposal_active(&proposal_id) {
-                    return Err(GovernorError::ActiveProposalForItemExists(proposal_id));
-                }
-            }
+            self.require_item_exists(item_id)?;
+            self.require_no_active_modify_proposal(item_id)?;
 
             let now = self.env().block_timestamp();
             let proposal = Proposal::item_modify(item_id, item, description, now + ONE_MINUTE);
@@ -294,30 +302,22 @@ pub mod governor {
             Ok(id)
         }
 
-        // works
         #[ink(message)]
         pub fn propose_modify_governor(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            self.require_token(Self::env().caller())?;
+            self.require_token_owner(Self::env().caller())?;
             self.propose_modify(item_id, item, description)
         }
 
         #[ink(message, payable)]
         pub fn propose_modify_external(&mut self, item_id: ItemId, item: String, description: String) -> Result<ProposalId, GovernorError> {
-            if self.env().transferred_value() < self.proposal_price {
-                return Err(GovernorError::InsufficientTransferQuota);
-            }
+            self.require_min_transferred_value()?;
             self.propose_modify(item_id, item, description)
         }
 
         #[ink(message)]
         pub fn propose_mint(&mut self, recipient: AccountId, description: String) -> Result<ProposalId, GovernorError> {
-            self.require_token(Self::env().caller())?;
-            
-            if let Some(proposal_id) = self.token_proposals.get(recipient) {
-                if self.is_proposal_active(&proposal_id) {
-                    return Err(GovernorError::ActiveProposalForAccountExists(proposal_id));
-                }
-            }
+            self.require_token_owner(Self::env().caller())?;
+            self.require_no_active_token_proposal(&recipient)?;   
             
             let now = self.env().block_timestamp();
             let proposal = Proposal::token_mint(recipient, description, now + ONE_MINUTE);
@@ -328,17 +328,12 @@ pub mod governor {
             Self::emit_event(Self::env(), Event::ProposalAdded(ProposalAdded { id }));
 
             Ok(id)
-        }
+        } 
         
         #[ink(message)]
         pub fn propose_burn(&mut self, holder: AccountId, description: String) -> Result<ProposalId, GovernorError> {
-            self.require_token(Self::env().caller())?;
-            
-            if let Some(proposal_id) = self.token_proposals.get(holder) {
-                if self.is_proposal_active(&proposal_id) {
-                    return Err(GovernorError::ActiveProposalForAccountExists(proposal_id));
-                }
-            }
+            self.require_token_owner(Self::env().caller())?;
+            self.require_no_active_token_proposal(&holder)?;   
 
             let now = self.env().block_timestamp();
             let proposal = Proposal::token_burn(holder, description, now + ONE_MINUTE);
@@ -351,22 +346,17 @@ pub mod governor {
             Ok(id)
         }
 
+        /********** VOTE **********/ 
+        
         #[ink(message)]
         pub fn vote(&mut self, proposal_id: ProposalId, vote: VoteType) -> Result<(), GovernorError> {
+            // No need to require_token here, because in that case weight of the vote will be 0
+            let proposal = self.require_proposal(proposal_id)?;
+            Self::require_proposal_not_executed(&proposal)?;
+            Self::require_before_vote_deadline(&proposal)?;
+
             let caller = self.env().caller();
-            let proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
-            if proposal.executed {
-                return Err(GovernorError::ProposalAlreadyExecuted);
-            }
-
-            let now = self.env().block_timestamp();
-            if now > proposal.vote_end {
-                return Err(GovernorError::VotePeriodEnded);
-            }
-
-            if self.votes.get(&(proposal_id, caller)).is_some() {
-                return Err(GovernorError::AlreadyVoted);
-            }
+            self.require_not_voted_before(proposal_id, caller)?;
 
             self.votes.insert(&(proposal_id, caller), &());
 
@@ -381,19 +371,15 @@ pub mod governor {
 
             Ok(())
         }
+    
+        /********** EXECUTE **********/
 
-        // Executes the proposal, and returns the item id in the database (if relevant)
+        /// Executes the proposal, and returns the item id in the database (if relevant)
         #[ink(message)]
         pub fn execute(&mut self, proposal_id: ProposalId) -> Result<Option<ItemId>, GovernorError> {
-            let mut proposal = self.proposals.get(&proposal_id).ok_or(GovernorError::ProposalNotFound)?;
-            if proposal.executed {
-                return Err(GovernorError::ProposalAlreadyExecuted);
-            }
-
-            let proposal_vote = self.proposal_votes.get(proposal_id).unwrap_or_default();
-            if proposal_vote.for_votes < self.quorum {
-                return Err(GovernorError::QuorumNotReached);
-            }
+            let mut proposal = self.require_proposal(proposal_id)?;
+            Self::require_proposal_not_executed(&proposal)?;
+            self.require_quorum_reached(proposal_id)?;
 
             let item_id = self._execute(&proposal)?;
             proposal.executed = true;
@@ -402,6 +388,40 @@ pub mod governor {
 
             Ok(item_id)
         }
+
+        // Executes the proposal, assuming quorum is reached and it's not been executed yet
+        fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
+            match &proposal.category {
+                 ProposalCategory::Token(kind) => {
+                    if let Some(token_contract) = self.token_contract {
+                        let mut token = Self
+                            ::contract_from_account_id::<TokenContractRef>(token_contract);
+                        match kind {
+                            ProposalTokenKind::Mint(recipient) =>
+                                _ = token.mint(*recipient)?,
+                            ProposalTokenKind::Burn(holder) =>
+                                token.burn(*holder)?,
+                        }
+                    }
+                },
+                ProposalCategory::Database { kind, item } => {
+                    if let Some(database_contract) = self.database_contract {
+                        let mut database = Self
+                            ::contract_from_account_id::<DatabaseContractRef>(database_contract);
+                        match kind {
+                            ProposalDatabaseKind::Add =>
+                                return Ok(Some(database.add_item(item.clone())?)),
+                            ProposalDatabaseKind::Modify(item_id) => {
+                                database.modify_item(*item_id, item.clone())?;
+                            }
+                        }
+                    }
+                }
+            }
+            Ok(None)
+        }
+
+        /********** GETTERS **********/
 
         #[ink(message)]
         pub fn get_proposal_vote(&self, proposal_id: ProposalId) -> Option<ProposalVote> {
@@ -448,54 +468,104 @@ pub mod governor {
             self.account_weight(account)
         }
 
-        // (For testing) Deletes the contract from the blockchain.
+        /// (For testing) Deletes the contract from the blockchain.
         #[ink(message)]
         pub fn suicide(&mut self) {
             self.env().terminate_contract(self.env().caller());
         }
 
-        fn _execute(&self, proposal: &Proposal) -> Result<Option<ItemId>, GovernorError> {
-            match &proposal.category {
-                 ProposalCategory::Token(kind) => {
-                    if let Some(token_contract) = self.token_contract {
-                        let mut token = Self
-                            ::contract_from_account_id::<TokenContractRef>(token_contract);
-                        match kind {
-                            ProposalTokenKind::Mint(recipient) =>
-                                _ = token.mint(*recipient)?,
-                            ProposalTokenKind::Burn(holder) =>
-                                token.burn(*holder)?,
-                        }
-                    }
-                },
-                ProposalCategory::Database { kind, item } => {
-                    if let Some(database_contract) = self.database_contract {
-                        let mut database = Self
-                        ::contract_from_account_id::<DatabaseContractRef>(database_contract);
-                        match kind {
-                            ProposalDatabaseKind::Add =>
-                                return Ok(Some(database.add_item(item.clone())?)),
-                            ProposalDatabaseKind::Modify(item_id) => {
-                                database.modify_item(*item_id, item.clone())?;
-                            }
-                        }
-                    }
+        /********** PRECONDITIONS **********/
+        
+        fn require_item_exists(&self, item_id: ItemId) -> Result<(), GovernorError> {
+            if !self.is_item_in_database(item_id) {
+                return Err(GovernorError::DatabaseError(DatabaseError::IdNotFound));
+            }
+            Ok(())
+        }
+        
+        fn require_proposal(&self, id: ProposalId) -> Result<Proposal, GovernorError> {
+            self.proposals.get(&id).ok_or(GovernorError::ProposalNotFound)
+        }
+
+        fn require_proposal_not_executed(proposal: &Proposal) -> Result<(), GovernorError> {
+            if proposal.executed {
+                return Err(GovernorError::ProposalAlreadyExecuted);
+            }
+            Ok(())
+        }
+
+        fn require_before_vote_deadline(proposal: &Proposal) -> Result<(), GovernorError> {
+            let now = Self::env().block_timestamp();
+            if now > proposal.vote_end {
+                return Err(GovernorError::VotePeriodEnded);
+            }
+            Ok(())
+        }
+
+        fn require_not_voted_before(&self, proposal_id: ProposalId, account: AccountId) -> Result<(), GovernorError> {
+            if self.votes.get(&(proposal_id, account)).is_some() {
+                return Err(GovernorError::AlreadyVoted);
+            }
+            Ok(())
+        }
+
+        fn require_quorum_reached(&self, proposal_id: ProposalId) -> Result<(), GovernorError> {
+            let proposal_vote = self.proposal_votes.get(proposal_id).unwrap_or_default();
+            if proposal_vote.for_votes < self.quorum {
+                return Err(GovernorError::QuorumNotReached);
+            }
+            Ok(())
+        }
+
+        fn require_no_active_modify_proposal(&self, item_id: ItemId) -> Result<(), GovernorError> {
+            if let Some(proposal_id) = self.database_proposals.get(item_id) {
+                if self.is_proposal_active(proposal_id) {
+                    return Err(GovernorError::ActiveProposalForItemExists(proposal_id));
                 }
             }
-            Ok(None)
+            Ok(())
         }
+
+        fn require_no_active_token_proposal(&self, account: &AccountId) -> Result<(), GovernorError> {
+            if let Some(proposal_id) = self.token_proposals.get(account) {
+                if self.is_proposal_active(proposal_id) {
+                    return Err(GovernorError::ActiveProposalForAccountExists(proposal_id));
+                }
+            }
+            Ok(())
+        }
+        
+        fn require_token_owner(&self, caller: AccountId) -> Result<(), GovernorError> {
+            if let Some(token_contract) = self.token_contract {
+                let balance = PSP34Ref::balance_of(&token_contract, caller);
+                if balance == 0 {
+                    return Err(GovernorError::TokenOwnershipRequired);
+                }
+            }
+            Ok(())
+        }
+        
+        fn require_min_transferred_value(&self) -> Result<(), GovernorError> {
+            if self.env().transferred_value() < self.proposal_price {
+                return Err(GovernorError::InsufficientTransferQuota);
+            }
+            Ok(())
+        }
+        
+        /********** HELPER METHODS **********/
 
         fn is_item_in_database(&self, id: ItemId) -> bool {
             if let Some(database_contract) = self.database_contract {
                 let database = Self
-                ::contract_from_account_id::<DatabaseContractRef>(database_contract);
+                    ::contract_from_account_id::<DatabaseContractRef>(database_contract);
                 database.has_item(id)
             } else {
                 true
             }
         }
 
-        fn is_proposal_active(&self, id: &ProposalId) -> bool {
+        // Proposal is active iff it's not executed and quorum may still be reached
+        fn is_proposal_active(&self, id: ProposalId) -> bool {
             let proposal = self.proposals.get(id).unwrap();
             let proposal_vote = self.proposal_votes.get(id);
             let against_votes = proposal_vote.map(|v| v.against_votes).unwrap_or_default();
@@ -522,20 +592,14 @@ pub mod governor {
             id
         }
 
-        fn require_token(&self, caller: AccountId) -> Result<(), GovernorError> {
-            if let Some(token_contract) = self.token_contract {
-                let balance = PSP34Ref::balance_of(&token_contract, caller);
-                if balance == 0 {
-                    return Err(GovernorError::TokenOwnershipRequired);
-                }
-            }
-            Ok(())
-        }
-
         fn emit_event<EE>(emitter: EE, event: Event) where EE: EmitEvent<GovernorContract> {
             emitter.emit_event(event);
         }
     }
+        
+    /********** EVENTS **********/
+    
+    type Event = <GovernorContract as ContractEventBase>::Type;
 
     #[ink(event)]
     pub struct ProposalAdded {

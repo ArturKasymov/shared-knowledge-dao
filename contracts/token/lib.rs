@@ -22,6 +22,7 @@ pub mod token {
         ownable: ownable::Data,
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
+        /// Vec of accounts possessing >= 1 token
         holders: Vec<AccountId>,
         next_id: u8,
     }
@@ -74,7 +75,7 @@ pub mod token {
             self.holders.clone()
         }
 
-        // (For testing) Deletes the contract from the blockchain.
+        /// (For testing) Deletes the contract from the blockchain.
         #[ink(message)]
         pub fn suicide(&mut self) {
             self.env().terminate_contract(self.env().caller());
